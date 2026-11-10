@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c94c416f238e25947a09cb6f21e997e6, type: 3}
+  m_Name: BaseOffice
+  m_EditorClassIdentifier: Assembly-CSharp::BaseOfficeData
+  _deskUnitPrefab: {fileID: 2224946467578696977, guid: 883ec0428c486814a9905279288b6e89, type: 3}
+  _deskSlots:
+  - _position: {x: -1.19964, y: 0, z: 4}
+    _yRotation: 90
+  - _position: {x: 1.19964, y: 0, z: 4}
+    _yRotation: -90
+  - _position: {x: -1.19964, y: 0, z: 10}
+    _yRotation: 90
+  - _position: {x: 1.19964, y: 0, z: 10}
+    _yRotation: -90
+  - _position: {x: -1.19964, y: 0, z: 16}
+    _yRotation: 90
+  - _position: {x: 1.19964, y: 0, z: 16}
+    _yRotation: -90
+  _officePropsPrefab: {fileID: 8970736390786098680, guid: 0fbd8d06dde22724d8e4effa69794ac2, type: 3}
+  _officeLength: 20
