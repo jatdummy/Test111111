@@ -13,7 +13,7 @@ public class LoopManager : MonoBehaviour
     [Header("플레이어")]
     [SerializeField] private FirstPersonController _player;
 
-    // 매 빌드 시작 시 플레이어 복귀 위치
+    // 게임 시작 시 플레이어 배치 위치
     [SerializeField] private Transform _startPoint;
 
     [Header("표시")]
@@ -22,7 +22,11 @@ public class LoopManager : MonoBehaviour
 
     [Header("출구")]
     [SerializeField] private ElevatorButton _elevatorButton;
+    [SerializeField] private Elevator _elevator;
     [SerializeField] private ReleaseDoorTrigger _releaseDoorTrigger;
+
+    // 매 빌드 시작 시 잠금 해제 후 닫는 Merge 문
+    [SerializeField] private ProximityDoor _mergeDoor;
 
     private int _count;
     private LoopSpec _currentSpec;
@@ -30,23 +34,33 @@ public class LoopManager : MonoBehaviour
 
     private void OnEnable()
     {
-        _elevatorButton.OnPressed += HandlePressed;
+        _elevator.OnArrived += HandleArrived;
         _releaseDoorTrigger.OnEntered += HandleEntered;
     }
 
-    private void Start() => StartLoop();
+    private void Start()
+    {
+        _player.Teleport(_startPoint.position, _startPoint.rotation);
+        StartLoop();
+    }
 
     private void OnDisable()
     {
-        _elevatorButton.OnPressed -= HandlePressed;
+        _elevator.OnArrived -= HandleArrived;
         _releaseDoorTrigger.OnEntered -= HandleEntered;
     }
 
-    private void HandlePressed() => Submit(ExitChoice.Elevator);
+    private void HandleArrived() => Submit(ExitChoice.Elevator);
 
-    private void HandleEntered() => Submit(ExitChoice.Release);
+    private void HandleEntered()
+    {
+        // Merge 문을 지나 잠긴 루프에서만 릴리즈 제출 인정, 홀 안 반복 진입 차단
+        if (!_mergeDoor.IsLocked) return;
 
-    // 현재 카운트 기준 빌드 생성과 플레이어 복귀
+        Submit(ExitChoice.Release);
+    }
+
+    // 현재 카운트 기준 빌드 생성과 Merge 문 초기화
     private void StartLoop()
     {
         _currentSpec = new LoopSpec(_count, Array.Empty<string>(), false);
@@ -55,7 +69,7 @@ public class LoopManager : MonoBehaviour
         _progressIndicatorView.Show(_count, ClearCount);
         // 0단계는 이상현상이 없으므로 엘리베이터 제출 차단
         _elevatorButton.SetInteractable(_count > 0);
-        _player.Teleport(_startPoint.position, _startPoint.rotation);
+        _mergeDoor.ResetDoor();
     }
 
     // 선택 판정 후 카운트 갱신과 다음 빌드 시작

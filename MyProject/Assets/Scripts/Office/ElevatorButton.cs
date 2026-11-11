@@ -42,8 +42,6 @@ public class ElevatorButton : MonoBehaviour
     public void SetInteractable(bool isInteractable)
     {
         _isInteractable = isInteractable;
-        // 텔레포트로 콜라이더가 꺼질 때 OnTriggerExit 누락 대비
-        _isPlayerInRange = false;
         _buttonRenderer.sharedMaterial = isInteractable ? _activeMaterial : _inactiveMaterial;
     }
 }

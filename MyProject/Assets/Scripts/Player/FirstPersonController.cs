@@ -53,6 +53,14 @@ public class FirstPersonController : MonoBehaviour
         _characterController.enabled = true;
     }
 
+    // 회전·시점·낙하 속도를 유지한 채 지정 거리만큼의 위치 이동
+    public void Warp(Vector3 offset)
+    {
+        _characterController.enabled = false;
+        transform.position += offset;
+        _characterController.enabled = true;
+    }
+
     private void Look()
     {
         Vector2 lookInput = _lookAction.action.ReadValue<Vector2>() * _lookSensitivity;
