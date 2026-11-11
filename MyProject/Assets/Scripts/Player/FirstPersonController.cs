@@ -1,76 +1,90 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// 1인칭 이동과 시점 회전
+// 1인칭 이동과 시점(달리기 없음)
 [RequireComponent(typeof(CharacterController))]
 public class FirstPersonController : MonoBehaviour
 {
-    private const float MaxPitch = 80f;
+    private const float MaxPitch = 85f;
+    private const float GroundedVerticalSpeed = -1f;
 
     [Header("입력")]
+    // 이동 입력
     [SerializeField] private InputActionReference _moveAction;
+
+    // 시점 입력
     [SerializeField] private InputActionReference _lookAction;
 
-    [Header("시점")]
-    // 상하 회전을 적용할 카메라 기준점
-    [SerializeField] private Transform _cameraPivot;
-
-    // 마우스 이동량 대비 회전 각도
-    [SerializeField] private float _lookSensitivity = 0.1f;
-
     [Header("이동")]
-    // 걷기 속도(초당 거리)
-    [SerializeField] private float _moveSpeed = 3f;
+    // 걷는 속도(초당 거리)
+    [SerializeField] private float _walkSpeed = 2.2f;
 
-    // 중력 가속도(초당 속도 변화)
+    // 중력 가속도
     [SerializeField] private float _gravity = -9.81f;
 
-    // 접지 중 바닥에 붙여 두는 하강 속도
-    [SerializeField] private float _groundedFallSpeed = -2f;
+    [Header("시점")]
+    // 위아래로 회전하는 카메라 축
+    [SerializeField] private Transform _cameraPivot;
+
+    // 마우스 감도(이동량 1당 회전 각도)
+    [SerializeField] private float _lookSensitivity = 0.1f;
 
     private CharacterController _characterController;
     private float _pitch;
     private float _verticalSpeed;
+    private bool _isInputEnabled;
+
+    public bool IsInputEnabled => _isInputEnabled;
 
     private void Awake() => _characterController = GetComponent<CharacterController>();
 
-    private void Start() => Cursor.lockState = CursorLockMode.Locked;
-
     private void Update()
     {
-        Look();
+        if (_isInputEnabled)
+            Look();
+
         Move();
     }
 
-    // 지정 위치·방향으로 즉시 이동
-    public void Teleport(Vector3 position, Quaternion rotation)
+    // 조작 허용 여부와 커서 잠금 전환
+    public void SetInputEnabled(bool isEnabled)
     {
+        _isInputEnabled = isEnabled;
+        Cursor.lockState = isEnabled ? CursorLockMode.Locked : CursorLockMode.None;
+        Cursor.visible = !isEnabled;
+    }
+
+    // 지정 위치와 방향으로 순간 이동
+    public void Teleport(Vector3 position, float yaw)
+    {
+        // CharacterController가 켜져 있으면 위치 변경이 무시됨
         _characterController.enabled = false;
-        transform.SetPositionAndRotation(position, rotation);
+        transform.SetPositionAndRotation(position, Quaternion.Euler(0f, yaw, 0f));
+        _characterController.enabled = true;
+
         _pitch = 0f;
         _verticalSpeed = 0f;
         _cameraPivot.localRotation = Quaternion.identity;
-        _characterController.enabled = true;
     }
 
+    // 마우스 입력으로 좌우는 몸, 위아래는 카메라 회전
     private void Look()
     {
-        Vector2 lookInput = _lookAction.action.ReadValue<Vector2>() * _lookSensitivity;
-        transform.Rotate(0f, lookInput.x, 0f);
-        _pitch = Mathf.Clamp(_pitch - lookInput.y, -MaxPitch, MaxPitch);
+        Vector2 delta = _lookAction.action.ReadValue<Vector2>() * _lookSensitivity;
+        transform.Rotate(0f, delta.x, 0f);
+        _pitch = Mathf.Clamp(_pitch - delta.y, -MaxPitch, MaxPitch);
         _cameraPivot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
     }
 
+    // 걷기 이동과 중력 적용
     private void Move()
     {
-        Vector2 moveInput = _moveAction.action.ReadValue<Vector2>();
-        Vector3 horizontal = (transform.right * moveInput.x + transform.forward * moveInput.y) * _moveSpeed;
+        Vector2 input = _isInputEnabled ? Vector2.ClampMagnitude(_moveAction.action.ReadValue<Vector2>(), 1f) : Vector2.zero;
+        Vector3 velocity = (transform.right * input.x + transform.forward * input.y) * _walkSpeed;
 
-        if (_characterController.isGrounded && _verticalSpeed < 0f)
-            _verticalSpeed = _groundedFallSpeed;
+        _verticalSpeed = _characterController.isGrounded ? GroundedVerticalSpeed : _verticalSpeed + _gravity * Time.deltaTime;
+        velocity.y = _verticalSpeed;
 
-        _verticalSpeed += _gravity * Time.deltaTime;
-        Vector3 velocity = horizontal + Vector3.up * _verticalSpeed;
         _characterController.Move(velocity * Time.deltaTime);
     }
 }
