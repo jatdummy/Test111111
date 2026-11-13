@@ -16,6 +16,12 @@ public class FirstPersonController : MonoBehaviour
     // 달리기 속도(초당 거리)
     [SerializeField] private float _runSpeed = 4f;
 
+    // 태블릿을 보는 동안 걷기 속도 배율 (0이면 멈춰서 봄, 1이면 감속 없음)
+    [SerializeField] private float _readingSpeedMultiplier = 0f;
+
+    // 코드 태블릿 (보는 동안 달리기 불가, 감속)
+    [SerializeField] private CodeTablet _codeTablet;
+
     [Header("시점")]
     // 마우스 감도(픽셀당 회전 각도)
     [SerializeField] private float _lookSensitivity = 0.1f;
@@ -70,7 +76,7 @@ public class FirstPersonController : MonoBehaviour
     private void Move()
     {
         Vector2 input = _moveAction.ReadValue<Vector2>();
-        float speed = _sprintAction.IsPressed() ? _runSpeed : _walkSpeed;
+        float speed = GetSpeed();
         Vector3 direction = transform.right * input.x + transform.forward * input.y;
 
         // 바닥에 닿아 있으면 낙하 속도 초기화
@@ -79,6 +85,14 @@ public class FirstPersonController : MonoBehaviour
 
         Vector3 velocity = direction * speed + Vector3.up * _verticalVelocity;
         _controller.Move(velocity * Time.deltaTime);
+    }
+
+    // 태블릿을 보는 중이면 달리지 못하고 천천히 걸음
+    private float GetSpeed()
+    {
+        if (_codeTablet != null && _codeTablet.IsRaised) return _walkSpeed * _readingSpeedMultiplier;
+
+        return _sprintAction.IsPressed() ? _runSpeed : _walkSpeed;
     }
 
     // Esc로 커서 해제, 클릭으로 다시 잠금

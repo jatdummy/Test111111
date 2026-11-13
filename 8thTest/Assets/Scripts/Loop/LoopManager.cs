@@ -7,7 +7,7 @@ public class LoopManager : MonoBehaviour
     private const int ClearCount = 8;
     private const int StartHour = 22;
     private const int HoursPerDay = 24;
-    private const int AnomalyCount = 4;
+    private const int AnomalyCount = 6;
     private const int MaxNormalStreak = 2;
     private const int MaxBugStreak = 4;
     private const int MismatchLightIndex = 2;
@@ -15,9 +15,26 @@ public class LoopManager : MonoBehaviour
     private const float OverrideChance = 0.5f;
     private const float EmissionIntensity = 2f;
 
+    // 모니터 글자 색 (리치 텍스트)
+    private const string WaitingColor = "#F2C14E";
+    private const string PassColor = "#5FD07A";
+    private const string FailColor = "#FF6B6B";
+    private const string CommentColor = "#6A9955";
+    private const string AddedColor = "#5FD07A";
+
+    // 로비(원본) 빌드에서만 코드 맨 위에 보여 줄 QA 수칙
+    private static readonly string[] RuleLines =
+    {
+        "// ── QA 수칙 ──",
+        "// 코드는 틀리지 않습니다.",
+        "// 사무실이 코드와 다르다면, 즉시 되돌아가세요.",
+        "// 사무실이 코드와 같다면, 승인하세요.",
+        "// 06:00 전에는 퇴근할 수 없습니다.",
+    };
+
     [Header("루프")]
     // 앞으로 통과했을 때 플레이어를 옮길 거리
-    [SerializeField] private Vector3 _forwardTeleportOffset = new(-27.2f, -3.2f, -5.7f);
+    [SerializeField] private Vector3 _forwardTeleportOffset = new(-27.2f, -3.2f, -6.2f);
 
     // 플레이어 (모니터 켜짐 거리 계산용)
     [SerializeField] private Transform _player;
@@ -54,6 +71,18 @@ public class LoopManager : MonoBehaviour
     // 걸어오는 동료
     [SerializeField] private ColleagueWalker _colleague;
 
+    // 눈 이상현상이 나올 문짝의 경첩 축 (문짝과 손잡이가 자식)
+    [SerializeField] private Transform _eyeDoorHinge;
+
+    // 눈 이상현상일 때 문이 안쪽으로 열리는 각도
+    [SerializeField] private float _eyeDoorOpenAngle = 20f;
+
+    // 문 틈 안쪽에서 보이는 눈
+    [SerializeField] private GameObject _doorEyes;
+
+    // 정수기에서 흘러나오는 핏물 (줄기, 방울, 웅덩이)
+    [SerializeField] private GameObject _bloodLeak;
+
     [Header("조명 색")]
     // 원본 조명 색
     [SerializeField] private Color _defaultLightColor = Color.white;
@@ -75,6 +104,7 @@ public class LoopManager : MonoBehaviour
     private Vector3 _extinguisherPosition;
     private Quaternion _extinguisherRotation;
     private Material[] _posterMaterials;
+    private Quaternion _eyeDoorRotation;
 
     private void Start()
     {
@@ -109,6 +139,7 @@ public class LoopManager : MonoBehaviour
         _extinguisherPosition = _extinguisher.position;
         _extinguisherRotation = _extinguisher.rotation;
         _posterMaterials = _bugPoster.sharedMaterials;
+        _eyeDoorRotation = _eyeDoorHinge.localRotation;
     }
 
     // 통로에 들어오면 판정 대기 상태로 전환
@@ -164,12 +195,15 @@ public class LoopManager : MonoBehaviour
         ApplyBuild(CreateJudgedBuild());
     }
 
+    // 다음 루프 모니터 맨 위에 보여 줄 직전 판정 결과
     private string CreateReport(bool hasBug, bool isCorrect)
     {
         string label = GetAnomalyLabel(_currentBuild.Anomaly);
-        if (isCorrect) return hasBug ? $"FIXED  {label}" : "MERGED  build matched spec";
+        if (isCorrect) return Colorize(hasBug ? $"● 롤백 완료 — 버그 확인됨 ({label})" : "● 이전 빌드 승인됨", PassColor);
 
-        return hasBug ? $"MISSED BUG  {label}" : "NO BUG  build matched spec";
+        // 오답이면 시간이 처음으로 돌아감 (롤백과 헷갈리지 않게 '초기화'로 표기)
+        string reset = $" — {FormatTime(0)}로 초기화";
+        return Colorize(hasBug ? $"● 버그 누락 ({label}){reset}" : $"● 정상 빌드 롤백{reset}", FailColor);
     }
 
     private string GetAnomalyLabel(AnomalyType anomaly)
@@ -177,13 +211,17 @@ public class LoopManager : MonoBehaviour
         switch (anomaly)
         {
             case AnomalyType.ExtinguisherOnCeiling:
-                return "Extinguisher: position";
+                return "소화기 위치";
             case AnomalyType.LightMismatch:
-                return $"Light[{MismatchLightIndex}]: not Blue";
+                return $"{MismatchLightIndex + 1}번 조명 색";
             case AnomalyType.MissingTexturePoster:
-                return "Poster B: missing texture";
+                return "포스터 B 텍스처";
             case AnomalyType.ColleagueStare:
-                return "Colleague: lookAt Player";
+                return "동료 시선";
+            case AnomalyType.EyesInDoor:
+                return "회의실 문 틈";
+            case AnomalyType.BloodWater:
+                return "정수기 물";
             default:
                 return string.Empty;
         }
@@ -277,6 +315,9 @@ public class LoopManager : MonoBehaviour
         _bugPoster.sharedMaterials = _posterMaterials;
         _colleague.gameObject.SetActive(true);
         _colleague.ResetWalk(false);
+        _eyeDoorHinge.localRotation = _eyeDoorRotation;
+        _doorEyes.SetActive(false);
+        _bloodLeak.SetActive(false);
     }
 
     private void ApplyLightColor(OfficeBuild build)
@@ -342,6 +383,14 @@ public class LoopManager : MonoBehaviour
             case AnomalyType.ColleagueStare:
                 _colleague.ResetWalk(true);
                 break;
+            case AnomalyType.EyesInDoor:
+                // 문이 살짝 열리고 틈 안쪽에서 눈이 보임
+                _eyeDoorHinge.localRotation = _eyeDoorRotation * Quaternion.Euler(0f, _eyeDoorOpenAngle, 0f);
+                _doorEyes.SetActive(true);
+                break;
+            case AnomalyType.BloodWater:
+                _bloodLeak.SetActive(true);
+                break;
         }
     }
 
@@ -369,14 +418,23 @@ public class LoopManager : MonoBehaviour
     private string BuildCodeText()
     {
         var builder = new StringBuilder();
-        builder.AppendLine($"// {FormatTime(_count)}   BUILD {_count} / {ClearCount}");
-        if (!string.IsNullOrEmpty(_report)) builder.AppendLine($"// {_report}");
 
+        // 클리어하면 리뷰 대기 대신 릴리스 완료
         if (_isCleared)
         {
-            builder.AppendLine("// RELEASE COMPLETE. Time to go home.");
+            builder.AppendLine(Colorize($"● 릴리스 완료   {FormatTime(_count)}", PassColor));
+            if (!string.IsNullOrEmpty(_report)) builder.AppendLine(_report);
+            builder.AppendLine();
+            builder.AppendLine(Colorize("// 퇴근하셔도 됩니다.", CommentColor));
             return builder.ToString();
         }
+
+        builder.AppendLine(Colorize($"● 리뷰 대기   Office_{GetBuildNumber():00}   {FormatTime(_count)}", WaitingColor));
+        if (!string.IsNullOrEmpty(_report)) builder.AppendLine(_report);
+        builder.AppendLine();
+
+        // 로비(원본)에서만 코드 맨 위에 수칙 주석 표시
+        if (_currentBuild.IsOriginal) AppendRules(builder);
 
         // 바뀐 값이 없으면 원본과 같은 한 줄로 표시
         bool hasOverride = _currentBuild.LightOverride != LightOverride.None || _currentBuild.HasNoColleague;
@@ -395,9 +453,20 @@ public class LoopManager : MonoBehaviour
 
     private void AppendOverrides(StringBuilder builder)
     {
-        if (_currentBuild.LightOverride != LightOverride.None) builder.AppendLine($"    override LightColor => {_currentBuild.LightOverride};");
-        if (_currentBuild.HasNoColleague) builder.AppendLine("    override NpcCount => 0;");
+        // 바뀐 줄은 + 표시와 초록색으로 한눈에 보이게
+        if (_currentBuild.LightOverride != LightOverride.None) builder.AppendLine(Colorize($"+   override LightColor => {_currentBuild.LightOverride};", AddedColor));
+        if (_currentBuild.HasNoColleague) builder.AppendLine(Colorize("+   override NpcCount => 0;", AddedColor));
     }
+
+    private void AppendRules(StringBuilder builder)
+    {
+        foreach (string line in RuleLines)
+        {
+            builder.AppendLine(Colorize(line, CommentColor));
+        }
+    }
+
+    private static string Colorize(string text, string color) => $"<color={color}>{text}</color>";
 
     private int GetBuildNumber() => _currentBuild.IsOriginal ? 0 : _count + 1;
 

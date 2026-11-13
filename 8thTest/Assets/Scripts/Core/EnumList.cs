@@ -15,6 +15,8 @@ public enum AnomalyType
     LightMismatch = 2,
     MissingTexturePoster = 3,
     ColleagueStare = 4,
+    EyesInDoor = 5,
+    BloodWater = 6,
 }
 
 // 코드에 적히는 조명 색 변경
