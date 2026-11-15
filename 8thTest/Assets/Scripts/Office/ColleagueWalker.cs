@@ -26,6 +26,9 @@ public class ColleagueWalker : MonoBehaviour
     // 앉은 자세
     [SerializeField] private SitPose _sitPose;
 
+    // 걷는 동작
+    [SerializeField] private WalkPose _walkPose;
+
     private Transform _player;
     private bool _isWalking;
     private bool _isStaring;
@@ -45,6 +48,7 @@ public class ColleagueWalker : MonoBehaviour
         _isWalking = false;
         _isStaring = isStaring;
         _sitPose.enabled = false;
+        _walkPose.enabled = false;
         _target = _aislePosition;
         transform.position = _startPosition;
         transform.rotation = Quaternion.LookRotation(_aislePosition - _startPosition);
@@ -54,6 +58,8 @@ public class ColleagueWalker : MonoBehaviour
     {
         _player = player;
         _isWalking = true;
+        _walkPose.Speed = _walkSpeed;
+        _walkPose.enabled = true;
     }
 
     private void WalkToEnd()
@@ -70,6 +76,7 @@ public class ColleagueWalker : MonoBehaviour
     private void SitDown()
     {
         _isWalking = false;
+        _walkPose.enabled = false;
         transform.position += Vector3.down * _sitDrop;
         transform.rotation = Quaternion.LookRotation(_sitDirection);
         _sitPose.enabled = true;
