@@ -203,7 +203,8 @@ public class LoopManager : MonoBehaviour
     }
 
     // 06:00 이후에는 동료들이 먼저 내려간 뒤에만 엘리베이터를 쓸 수 있음 (퇴근 연출과 문이 겹치지 않게)
-    public bool CanUseElevator => !_isCleared || _ending.CanLeave;
+    // 밤에는 통로에 들어와 판정 대기 중일 때만 롤백할 수 있음 (로비에서 타면 아무 일도 안 일어나는 것 방지)
+    public bool CanUseElevator => _isCleared ? _ending.CanLeave : _isArmed;
 
     private void Update() => UpdateMonitorWake();
 

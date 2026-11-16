@@ -47,7 +47,7 @@ public class EndingDirector : MonoBehaviour
     [SerializeField] private TextMesh _speech;
 
     // 엘리베이터 문짝 (동료들이 타면 닫힘)
-    [SerializeField] private GameObject _elevatorDoor;
+    [SerializeField] private Elevator _elevator;
 
     // 동료들을 태우고 문이 닫혀 있는 시간(초)
     [SerializeField] private float _doorClosedSeconds = 2f;
@@ -97,6 +97,8 @@ public class EndingDirector : MonoBehaviour
     public void PlayReturn()
     {
         StopAllCoroutines();
+        _elevator.HoldOpen(false);
+        _elevator.HoldClosed(false);
         SetMorning(false);
         _speech.gameObject.SetActive(false);
         foreach (Leaver leaver in _leavers)
@@ -140,6 +142,9 @@ public class EndingDirector : MonoBehaviour
         // 플레이어가 계단을 올라와 사무실에 들어올 때까지 기다림
         yield return new WaitUntil(IsPlayerInOffice);
 
+        // 동료들이 들어갈 수 있게 엘리베이터 문을 열어 둠
+        _elevator.HoldOpen(true);
+
         int arrivedCount = 0;
         foreach (Leaver leaver in _leavers)
         {
@@ -149,7 +154,9 @@ public class EndingDirector : MonoBehaviour
         yield return new WaitUntil(() => arrivedCount == _leavers.Length);
 
         // 모두 타면 문이 닫히고, 다시 열렸을 때는 아무도 없음
-        _elevatorDoor.SetActive(true);
+        _elevator.HoldOpen(false);
+        _elevator.HoldClosed(true);
+        yield return new WaitUntil(() => _elevator.IsDoorClosed);
         yield return new WaitForSeconds(_doorClosedSeconds);
 
         foreach (Leaver leaver in _leavers)
@@ -157,7 +164,7 @@ public class EndingDirector : MonoBehaviour
             leaver.Body.gameObject.SetActive(false);
         }
 
-        _elevatorDoor.SetActive(false);
+        _elevator.HoldClosed(false);
         CanLeave = true;
     }
 
