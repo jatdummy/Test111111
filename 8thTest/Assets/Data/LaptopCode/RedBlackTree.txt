@@ -1,0 +1,157 @@
+// 레드블랙 트리 삽입과 균형 맞추기
+public class RedBlackTree
+{
+    private const bool Red = true;
+    private const bool Black = false;
+
+    private Node _root;
+    private int _count;
+
+    private class Node
+    {
+        public int Key;
+        public bool Color;
+        public Node Left;
+        public Node Right;
+        public Node Parent;
+
+        public Node(int key)
+        {
+            Key = key;
+            Color = Red;
+        }
+    }
+
+    public int Count => _count;
+
+    public void Insert(int key)
+    {
+        var node = new Node(key);
+        Node parent = null;
+        Node cur = _root;
+
+        while (cur != null)
+        {
+            parent = cur;
+            cur = key < cur.Key
+                ? cur.Left : cur.Right;
+        }
+
+        node.Parent = parent;
+        if (parent == null) _root = node;
+        else if (key < parent.Key)
+            parent.Left = node;
+        else parent.Right = node;
+
+        _count++;
+        FixInsert(node);
+    }
+
+    public bool Contains(int key)
+    {
+        Node cur = _root;
+        while (cur != null)
+        {
+            if (key == cur.Key) return true;
+            cur = key < cur.Key
+                ? cur.Left : cur.Right;
+        }
+
+        return false;
+    }
+
+    private void FixInsert(Node node)
+    {
+        while (node != _root
+            && node.Parent.Color == Red)
+        {
+            Node parent = node.Parent;
+            Node grand = parent.Parent;
+
+            if (parent == grand.Left)
+            {
+                Node uncle = grand.Right;
+                if (uncle != null
+                    && uncle.Color == Red)
+                {
+                    parent.Color = Black;
+                    uncle.Color = Black;
+                    grand.Color = Red;
+                    node = grand;
+                    continue;
+                }
+
+                if (node == parent.Right)
+                {
+                    node = parent;
+                    RotateLeft(node);
+                    parent = node.Parent;
+                }
+
+                parent.Color = Black;
+                grand.Color = Red;
+                RotateRight(grand);
+            }
+            else
+            {
+                Node uncle = grand.Left;
+                if (uncle != null
+                    && uncle.Color == Red)
+                {
+                    parent.Color = Black;
+                    uncle.Color = Black;
+                    grand.Color = Red;
+                    node = grand;
+                    continue;
+                }
+
+                if (node == parent.Left)
+                {
+                    node = parent;
+                    RotateRight(node);
+                    parent = node.Parent;
+                }
+
+                parent.Color = Black;
+                grand.Color = Red;
+                RotateLeft(grand);
+            }
+        }
+
+        _root.Color = Black;
+    }
+
+    private void RotateLeft(Node x)
+    {
+        Node y = x.Right;
+        x.Right = y.Left;
+        if (y.Left != null)
+            y.Left.Parent = x;
+
+        y.Parent = x.Parent;
+        if (x.Parent == null) _root = y;
+        else if (x == x.Parent.Left)
+            x.Parent.Left = y;
+        else x.Parent.Right = y;
+
+        y.Left = x;
+        x.Parent = y;
+    }
+
+    private void RotateRight(Node x)
+    {
+        Node y = x.Left;
+        x.Left = y.Right;
+        if (y.Right != null)
+            y.Right.Parent = x;
+
+        y.Parent = x.Parent;
+        if (x.Parent == null) _root = y;
+        else if (x == x.Parent.Right)
+            x.Parent.Right = y;
+        else x.Parent.Left = y;
+
+        y.Right = x;
+        x.Parent = y;
+    }
+}

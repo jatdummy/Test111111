@@ -11,6 +11,9 @@ public class ColleagueWalker : MonoBehaviour
     // 걷기 시작 위치
     [SerializeField] private Vector3 _startPosition;
 
+    // 탕비실 문 앞에서 통로로 나오는 위치 (책상 섬을 가로지르지 않게 통로로 먼저 나옴)
+    [SerializeField] private Vector3 _doorwayPosition;
+
     // 자리 앞 통로 위치 (다른 책상을 피해 여기까지 걸은 뒤 자리로 들어감)
     [SerializeField] private Vector3 _aislePosition;
 
@@ -28,6 +31,9 @@ public class ColleagueWalker : MonoBehaviour
 
     // 걷는 동작
     [SerializeField] private WalkPose _walkPose;
+
+    // 앉은 뒤 타자 치는 동작 (07은 쉬지 않고 빌드를 돌림)
+    [SerializeField] private TypingPose _typingPose;
 
     private Transform _player;
     private bool _isWalking;
@@ -49,9 +55,10 @@ public class ColleagueWalker : MonoBehaviour
         _isStaring = isStaring;
         _sitPose.enabled = false;
         _walkPose.enabled = false;
-        _target = _aislePosition;
+        _typingPose.enabled = false;
+        _target = _doorwayPosition;
         transform.position = _startPosition;
-        transform.rotation = Quaternion.LookRotation(_aislePosition - _startPosition);
+        transform.rotation = Quaternion.LookRotation(_doorwayPosition - _startPosition);
     }
 
     public void BeginWalk(Transform player)
@@ -68,8 +75,10 @@ public class ColleagueWalker : MonoBehaviour
         if (transform.position != _target) return;
 
         // 통로에 도착하면 자리로 꺾고, 자리에 도착하면 앉음
+        // 문 앞에 도착하면 통로를 따라 자리 앞까지 감
         if (_target == _endPosition) SitDown();
-        else _target = _endPosition;
+        else if (_target == _aislePosition) _target = _endPosition;
+        else _target = _aislePosition;
     }
 
     // 도착하면 자리에 앉음
@@ -80,6 +89,7 @@ public class ColleagueWalker : MonoBehaviour
         transform.position += Vector3.down * _sitDrop;
         transform.rotation = Quaternion.LookRotation(_sitDirection);
         _sitPose.enabled = true;
+        _typingPose.enabled = true;
     }
 
     // 평소에는 걷는 방향, 이상현상이면 플레이어 쪽

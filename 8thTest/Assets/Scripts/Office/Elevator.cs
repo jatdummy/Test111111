@@ -44,6 +44,7 @@ public class Elevator : MonoBehaviour
     private void TryRide()
     {
         if (_rider == null || _isRiding) return;
+        if (!_loopManager.CanUseElevator) return;
         if (!_interactAction.WasPressedThisFrame()) return;
 
         StartCoroutine(Ride());
