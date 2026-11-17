@@ -14,10 +14,10 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private float _walkSpeed = 2.2f;
 
     // 달리기 속도(초당 거리)
-    [SerializeField] private float _runSpeed = 4f;
+    [SerializeField] private float _runSpeed = 3.6f;
 
     // 태블릿을 보는 동안 걷기 속도 배율 (0이면 멈춰서 봄, 1이면 감속 없음)
-    [SerializeField] private float _readingSpeedMultiplier = 0f;
+    [SerializeField] private float _readingSpeedMultiplier = 0.5f;
 
     // 코드 태블릿 (보는 동안 달리기 불가, 감속)
     [SerializeField] private CodeTablet _codeTablet;
@@ -36,12 +36,17 @@ public class FirstPersonController : MonoBehaviour
     private float _pitch;
     private float _verticalVelocity;
 
+    // 일시정지 메뉴가 열린 동안 이동 · 시점 · 커서 처리를 멈춤
+    public bool IsInputBlocked { get; set; }
+
     private void Awake() => CacheComponents();
 
     private void Start() => SetCursorLocked(true);
 
     private void Update()
     {
+        if (IsInputBlocked) return;
+
         UpdateCursorLock();
         Look();
         Move();
@@ -98,7 +103,7 @@ public class FirstPersonController : MonoBehaviour
     // Esc로 커서 해제, 클릭으로 다시 잠금
     private void UpdateCursorLock()
     {
-        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) SetCursorLocked(false);
+        // (Esc는 이제 일시정지 메뉴가 맡아서 커서를 풀고 잠금)
         if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame) SetCursorLocked(true);
     }
 

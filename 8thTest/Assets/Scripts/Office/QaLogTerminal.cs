@@ -8,18 +8,35 @@ using UnityEngine.InputSystem;
 // 처음 하는 플레이어용 도우미: 한 판(22:00 → 06:00)에 몇 번만 보낼 수 있고, 다 쓴 뒤 누르면 고장 남
 public class QaLogTerminal : MonoBehaviour
 {
-    private const string IdleText = "<color=#5FD07A>QA 어시스턴트</color>\n\n판정 기록을 분석했습니다.\n\n<color=#F2C14E>[E] 태블릿으로 리포트 전송</color>";
-    private const string EmptyText = "<color=#5FD07A>QA 어시스턴트</color>\n\n아직 분석할 판정 기록이 없습니다.\n\n<color=#6A9955>// 검수를 진행한 뒤 다시 오세요</color>";
-    private const string SendingText = "<color=#5FD07A>QA 어시스턴트</color>\n\n리포트 전송 중";
-    private const string SentText = "<color=#5FD07A>QA 어시스턴트</color>\n\n<color=#5FD07A>전송 완료</color>\n\n태블릿을 확인하세요.";
+    // 화면은 큰 상태 한 줄 + 작은 안내 한 줄 (멀리서도, 방송 화면에서도 상태가 읽히게)
+    private const string IdleTitle = "대기 중";
+    private const string IdleSub = "<color=#7D848E>QA 어시스턴트</color>";
+    private const string ReadyTitle = "리포트 준비됨";
+    private const string ReadySub = "<color=#C9CDD3>[E] 태블릿으로 전송</color>";
+    private const string SendingTitle = "<color=#F2C14E>전송 중</color>";
+    private const string SentTitle = "<color=#5FD07A>전송 완료</color>";
+    private const string SentSub = "<color=#C9CDD3>태블릿을 확인하세요</color>";
+    private const string IdleColor = "7D848E";
+    private const string ReadyColor = "F2C14E";
+    private const float ReadyBlinkSpeed = 3f;
+    private const float CursorBlinkSeconds = 0.5f;
     private const string ReportHeader = "<color=#5FD07A>QA 어시스턴트 리포트</color>";
     private const int MaxStoredLines = 60;
     private const string GlitchChars = "█▓▒░#@%&?!/\\|<>";
     private const float GlitchInterval = 0.06f;
     private const int DotCount = 3;
 
-    // 단말 화면 글자
+    // 단말 화면 글자 (큰 상태 글씨)
     [SerializeField] private TextMesh _screenText;
+
+    // 상태 아래 작은 안내 글씨
+    [SerializeField] private TextMesh _subText;
+
+    // 화면 구석에서 깜빡이는 커서 (컴퓨터가 켜져 있다는 느낌)
+    [SerializeField] private TextMesh _cursorText;
+
+    // 고장 날 때 깨진 글자를 보여 줄 크기 배율 (큰 상태 글씨에 비해 작게)
+    [SerializeField] private float _glitchTextScale = 0.5f;
 
     // 플레이어 (가까이 왔는지 확인용)
     [SerializeField] private Transform _player;
@@ -27,8 +44,20 @@ public class QaLogTerminal : MonoBehaviour
     // 리포트를 받을 플레이어 태블릿
     [SerializeField] private CodeTablet _tablet;
 
+    // 가까이 가면 화면 아래에 뜨는 [E] 사용 안내
+    [SerializeField] private GameObject _prompt;
+
+    // 사용 안내 문구
+    [SerializeField] private UnityEngine.UI.Text _promptText;
+
     // 이 거리 안에 들어오면 화면이 켜지고 전송할 수 있음
     [SerializeField] private float _useDistance = 1.8f;
+
+    // 화면 정면에서 이 각도 안에 서 있어야 사용할 수 있음 (옆이나 뒤에서는 안 됨)
+    [SerializeField] private float _frontAngle = 40f;
+
+    // 카메라가 화면을 이 각도 안으로 바라보고 있어야 사용할 수 있음
+    [SerializeField] private float _lookAngle = 25f;
 
     // 리포트에 담는 최근 기록 줄 수
     [SerializeField] private int _reportLines = 9;
@@ -95,6 +124,7 @@ public class QaLogTerminal : MonoBehaviour
     private readonly List<string> _lines = new();
     private InputAction _interactAction;
     private int _sendCount;
+    private bool _hasNewFailure;
     private bool _isBusy;
     private bool _isBroken;
     private Material _liveScreenMaterial;
@@ -115,15 +145,38 @@ public class QaLogTerminal : MonoBehaviour
         if (_isBroken) return;
 
         bool isNear = Vector3.Distance(_player.position, transform.position) <= _useDistance;
-        if (!_isBusy) _screenText.gameObject.SetActive(isNear);
-        if (!isNear || _isBusy || !_interactAction.WasPressedThisFrame()) return;
+        if (!_isBusy) SetScreenVisible(isNear);
+        UpdateScreenAnimation();
 
-        // 보낼 기록이 없으면 횟수를 쓰지 않음
-        if (_lines.Count == 0) return;
+        // 화면 바로 앞에서 화면을 보고 있어야 [E] 안내가 뜨고 사용할 수 있음
+        bool isFacing = isNear && IsFacingScreen();
+        UpdatePrompt(isFacing);
+        if (!isFacing || _isBusy || !_interactAction.WasPressedThisFrame()) return;
+
+        // 새로 틀린 판정이 없으면 리포트를 보내지 않고 횟수도 쓰지 않음
+        if (!_hasNewFailure) return;
 
         // 보낼 수 있는 횟수를 다 쓴 뒤에 누르면 고장
         if (_sendCount >= _maxSends) StartCoroutine(Break());
         else StartCoroutine(Send());
+    }
+
+    // 판정이 틀렸음을 알림 (다음 리포트를 받을 수 있게 됨)
+    public void MarkFailure()
+    {
+        _hasNewFailure = true;
+        if (!_isBusy && !_isBroken) ShowIdle();
+    }
+
+    // 단말 정면 쪽에 서 있고, 카메라가 화면을 바라보는지
+    private bool IsFacingScreen()
+    {
+        Vector3 screenCenter = _screen.bounds.center;
+        Vector3 toPlayer = _player.position - screenCenter;
+        toPlayer.y = 0f;
+        if (Vector3.Angle(-transform.forward, toPlayer) > _frontAngle) return false;
+
+        return Vector3.Angle(_cameraPivot.forward, screenCenter - _cameraPivot.position) <= _lookAngle;
     }
 
     // 판정 기록 한 줄 추가 (리포트에는 최근 몇 줄만 담김)
@@ -134,25 +187,65 @@ public class QaLogTerminal : MonoBehaviour
         if (!_isBusy && !_isBroken) ShowIdle();
     }
 
-    private void ShowIdle() => _screenText.text = _lines.Count == 0 ? EmptyText : IdleText;
+    // 쓸 수 있을 때만 [E] 안내 (전송 중 · 고장 뒤에는 숨김)
+    private void UpdatePrompt(bool isNear)
+    {
+        bool isVisible = isNear && !_isBusy && !_isBroken;
+        _prompt.SetActive(isVisible);
+        if (isVisible) _promptText.text = _hasNewFailure ? "버그 리포트 받기" : "버그 리포트 받기  <color=#9AA0A6>(틀린 판정 없음)</color>";
+    }
+
+    private void ShowIdle()
+    {
+        _subText.text = _hasNewFailure ? ReadySub : IdleSub;
+        UpdateScreenAnimation();
+    }
+
+    // 리포트가 준비되면 상태 글씨가 천천히 깜빡이고, 구석 커서는 늘 깜빡임
+    private void UpdateScreenAnimation()
+    {
+        bool isCursorOn = Time.time % (CursorBlinkSeconds * 2f) < CursorBlinkSeconds;
+        _cursorText.text = isCursorOn ? "<color=#5FD07A>_</color>" : string.Empty;
+        if (_isBusy) return;
+
+        if (!_hasNewFailure)
+        {
+            _screenText.text = $"<color=#{IdleColor}>{IdleTitle}</color>";
+            return;
+        }
+
+        float alpha = Mathf.Lerp(0.35f, 1f, (Mathf.Sin(Time.time * ReadyBlinkSpeed) + 1f) * 0.5f);
+        _screenText.text = $"<color=#{ReadyColor}{Mathf.RoundToInt(alpha * 255f):X2}>{ReadyTitle}</color>";
+    }
+
+    private void SetScreenVisible(bool isVisible)
+    {
+        _screenText.gameObject.SetActive(isVisible);
+        _subText.gameObject.SetActive(isVisible);
+        _cursorText.gameObject.SetActive(isVisible);
+    }
 
     // 전송 중 점이 하나씩 늘다가, 태블릿에 알림이 가고 전송 완료
     private IEnumerator Send()
     {
         _isBusy = true;
+        _prompt.SetActive(false);
         _sendCount++;
 
         float elapsed = 0f;
         while (elapsed < _sendSeconds)
         {
             int dots = 1 + (int)(elapsed / _sendSeconds * DotCount * 2) % DotCount;
-            _screenText.text = SendingText + new string('.', dots);
+            _screenText.text = SendingTitle + new string('.', dots);
+            _subText.text = IdleSub;
             elapsed += Time.deltaTime;
             yield return null;
         }
 
         _tablet.ReceiveReport(BuildReport());
-        _screenText.text = SentText;
+        _hasNewFailure = false;
+        _screenText.text = SentTitle;
+        _subText.text = SentSub;
         yield return new WaitForSeconds(_sentSeconds);
 
         _isBusy = false;
@@ -180,7 +273,11 @@ public class QaLogTerminal : MonoBehaviour
     private IEnumerator Break()
     {
         _isBusy = true;
-        _screenText.gameObject.SetActive(true);
+        _prompt.SetActive(false);
+        SetScreenVisible(true);
+        _subText.gameObject.SetActive(false);
+        _cursorText.gameObject.SetActive(false);
+        _screenText.characterSize *= _glitchTextScale;
 
         float elapsed = 0f;
         while (elapsed < _breakSeconds)
@@ -282,7 +379,11 @@ public class QaLogTerminal : MonoBehaviour
     {
         _isBusy = false;
         _isBroken = true;
-        _screenText.gameObject.SetActive(false);
+        SetScreenVisible(false);
+        _prompt.SetActive(false);
+
+        // 단말이 부서지면 태블릿 리포트 페이지도 먹통
+        _tablet.SetReportOffline();
         _screen.sharedMaterial = _deadScreenMaterial;
         _cracks.SetActive(true);
 

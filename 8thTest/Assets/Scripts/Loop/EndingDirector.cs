@@ -49,6 +49,9 @@ public class EndingDirector : MonoBehaviour
     // 엘리베이터 문짝 (동료들이 타면 닫힘)
     [SerializeField] private Elevator _elevator;
 
+    // 연출이 시작되면 내릴 플레이어 태블릿 (햇빛 · 동료들이 가려지지 않게)
+    [SerializeField] private CodeTablet _tablet;
+
     // 동료들을 태우고 문이 닫혀 있는 시간(초)
     [SerializeField] private float _doorClosedSeconds = 2f;
 
@@ -84,6 +87,7 @@ public class EndingDirector : MonoBehaviour
 
         _isPlaying = true;
         CanLeave = false;
+        _tablet.Close();
         foreach (Leaver leaver in _leavers)
         {
             leaver.CachePose();
@@ -97,6 +101,7 @@ public class EndingDirector : MonoBehaviour
     public void PlayReturn()
     {
         StopAllCoroutines();
+        _tablet.Close();
         _elevator.HoldOpen(false);
         _elevator.HoldClosed(false);
         SetMorning(false);

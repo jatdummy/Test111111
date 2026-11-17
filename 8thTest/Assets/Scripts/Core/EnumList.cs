@@ -30,3 +30,12 @@ public enum LightOverride
     Red = 1,
     Blue = 2,
 }
+
+// 근무 중 긴급 핫픽스 종류 (사무실은 그대로 두고 코드만 바꿈)
+public enum HotfixKind
+{
+    None = 0,
+    AddLine = 1,     // 사무실에 없는 변경을 코드에 추가 → 버그
+    RemoveLine = 2,  // 사무실에 있는 변경을 코드에서 지움 → 버그
+    Legitimize = 3,  // 이상현상을 코드에 반영 → 정상
+}
