@@ -146,6 +146,12 @@ public class LoopManager : MonoBehaviour
         "나도\n승인했었어",
     };
 
+    // 문구마다 붙는 서명 (_bloodPhrases와 같은 순서, 빈 칸이면 서명 없음)
+    [SerializeField] private string[] _bloodSignatures = { "", "", "- 01", "", "- 07" };
+
+    // 피로 쓴 서명 글자 (서명이 없는 문구면 숨김)
+    [SerializeField] private TextMesh _bloodSignature;
+
     // 피로 쓴 글이 나오기 시작하는 경과 시간 (22:00 기준, 3이면 01:00)
     [SerializeField] private int _bloodWritingStartHour = 3;
 
@@ -156,13 +162,19 @@ public class LoopManager : MonoBehaviour
     {
         "",
         "",
-        "└ 공동 검수: tester_07",
+        "[SYS] 이전 세션 검수자 tester_07 · 로그아웃 기록 없음",
         "",
-        "└ 공동 검수: tester_01",
+        "[SYS] 이전 세션 검수자 tester_01 · 로그아웃 기록 없음",
         "",
-        "└ 좌석 배정 완료: tester_08",
+        "[SYS] 다음 세션 검수자 tester_09 · 좌석 배정 완료",
         "",
     };
+
+    // 판정 기록과 단서를 남길 검수 로그 단말 (코드판에는 결과를 띄우지 않음)
+    [SerializeField] private QaLogTerminal _qaLog;
+
+    // 코드가 바뀔 때마다 알림을 띄울 플레이어 태블릿
+    [SerializeField] private CodeTablet _tablet;
 
     // 06:00 퇴근 연출 (햇빛, 동료 퇴근, 엘리베이터 반전)
     [SerializeField] private EndingDirector _ending;
@@ -184,7 +196,7 @@ public class LoopManager : MonoBehaviour
     private int _bugStreak;
     private bool _isArmed;
     private bool _isCleared;
-    private string _report;
+    private bool _isReady;
     private Vector3 _extinguisherPosition;
     private Quaternion _extinguisherRotation;
     private Material[] _posterMaterials;
@@ -200,6 +212,7 @@ public class LoopManager : MonoBehaviour
     {
         CacheOriginals();
         ApplyBuild(CreateOriginalBuild());
+        _isReady = true;
     }
 
     // 06:00 이후에는 동료들이 먼저 내려간 뒤에만 엘리베이터를 쓸 수 있음 (퇴근 연출과 문이 겹치지 않게)
@@ -270,7 +283,7 @@ public class LoopManager : MonoBehaviour
         // 원본 확인 구간은 판정 없이 검수 시작
         if (_currentBuild.IsOriginal)
         {
-            _report = null;
+            if (isForward) _qaLog.AddLine(Colorize($"[{FormatTime(0)}] 검수 시작", WaitingColor));
             ApplyBuild(isForward ? CreateJudgedBuild() : CreateOriginalBuild());
             return;
         }
@@ -278,7 +291,8 @@ public class LoopManager : MonoBehaviour
         bool hasBug = _currentBuild.Anomaly != AnomalyType.None;
         bool isCorrect = isForward != hasBug;
         // 검수 기록 단서는 맞혔을 때만 붙음 (시간이 진행될수록 드러나는 보상)
-        _report = CreateReport(hasBug, isCorrect) + (isCorrect ? GetReportHint() : string.Empty);
+        // 판정 결과와 단서는 코드판이 아니라 검수 로그 단말에 남김
+        LogJudgement(isForward, hasBug, isCorrect);
 
         if (!isCorrect)
         {
@@ -307,22 +321,31 @@ public class LoopManager : MonoBehaviour
         _isArmed = false;
         _isCleared = false;
         _count = 0;
-        _report = null;
         ApplyBuild(CreateOriginalBuild());
 
         // 엘리베이터 문이 열리면 밤 사무실, 잠시 뒤 타이틀로
         _ending.PlayReturn();
     }
 
-    // 다음 루프 모니터 맨 위에 보여 줄 직전 판정 결과
-    private string CreateReport(bool hasBug, bool isCorrect)
+    // 검수 로그 단말에 남길 판정 기록 (오답이면 틀린 이유, 정답이면 이번 시간대 단서)
+    private void LogJudgement(bool isForward, bool hasBug, bool isCorrect)
     {
-        string label = GetAnomalyLabel(_currentBuild.Anomaly);
-        if (isCorrect) return Colorize(hasBug ? $"● 롤백 완료 — 버그 확인됨 ({label})" : "● 이전 빌드 승인됨", PassColor);
+        string action = isForward ? "승인" : "롤백";
+        string result = isCorrect ? Colorize("PASS", PassColor) : Colorize("FAIL", FailColor);
+        _qaLog.AddLine($"[{FormatTime(_count)}] Office_{GetBuildNumber():00}  {action}  {result}");
 
-        // 오답이면 시간이 처음으로 돌아감 (롤백과 헷갈리지 않게 '초기화'로 표기)
-        string reset = $" — {FormatTime(0)}로 초기화";
-        return Colorize(hasBug ? $"● 버그 누락 ({label}){reset}" : $"● 정상 빌드 롤백{reset}", FailColor);
+        if (!isCorrect)
+        {
+            string reason = hasBug ? $"놓친 버그: {GetAnomalyLabel(_currentBuild.Anomaly)}" : "정상 빌드였음";
+            _qaLog.AddLine(Colorize($"   └ {reason}", FailColor));
+
+            // 오답이면 시간이 처음으로 돌아감 (롤백과 헷갈리지 않게 '초기화'로 표기)
+            _qaLog.AddLine(Colorize($"── {FormatTime(0)} 세션 초기화 ──", CommentColor));
+            return;
+        }
+
+        string hint = GetReportHint();
+        if (!string.IsNullOrEmpty(hint)) _qaLog.AddLine(hint);
     }
 
     // 이번 시간대의 검수 기록 한 줄 (없으면 빈 문자열)
@@ -330,7 +353,7 @@ public class LoopManager : MonoBehaviour
     {
         if (_count >= _reportHints.Length || string.IsNullOrEmpty(_reportHints[_count])) return string.Empty;
 
-        return "\n" + Colorize(_reportHints[_count], CommentColor);
+        return Colorize(_reportHints[_count], CommentColor);
     }
 
     private string GetAnomalyLabel(AnomalyType anomaly)
@@ -352,7 +375,7 @@ public class LoopManager : MonoBehaviour
             case AnomalyType.WiltedPlant:
                 return "화분 상태";
             case AnomalyType.CabinetDoorOpen:
-                return "캐비닛 문";
+                return "서류 캐비닛 문";
             case AnomalyType.TrashOverflow:
                 return "쓰레기통";
             case AnomalyType.WhiteboardMessage:
@@ -455,6 +478,9 @@ public class LoopManager : MonoBehaviour
         _colleague.gameObject.SetActive(!build.HasNoColleague);
         ApplyPropOverrides(build);
         UpdateTexts();
+
+        // 게임 시작 때 말고, 루프마다 코드가 바뀌면 태블릿 알림
+        if (_isReady) _tablet.NotifyCodeChanged();
     }
 
     private void ResetOffice()
@@ -609,7 +635,13 @@ public class LoopManager : MonoBehaviour
     // 화이트보드에 피로 쓴 글 (매번 다른 문구)
     private void ShowBloodWriting()
     {
-        _bloodMessage.text = _bloodPhrases[Random.Range(0, _bloodPhrases.Length)];
+        int index = Random.Range(0, _bloodPhrases.Length);
+        _bloodMessage.text = _bloodPhrases[index];
+
+        // 서명은 문구를 쓴 사람마다 다르고, 없는 문구도 있음
+        string signature = index < _bloodSignatures.Length ? _bloodSignatures[index] : string.Empty;
+        _bloodSignature.text = signature;
+        _bloodSignature.gameObject.SetActive(!string.IsNullOrEmpty(signature));
         _bloodWriting.SetActive(true);
     }
 
@@ -642,14 +674,12 @@ public class LoopManager : MonoBehaviour
         if (_isCleared)
         {
             builder.AppendLine(Colorize($"● 릴리스 완료   {FormatTime(_count)}", PassColor));
-            if (!string.IsNullOrEmpty(_report)) builder.AppendLine(_report);
             builder.AppendLine();
             builder.AppendLine(Colorize("// 퇴근하셔도 됩니다.", CommentColor));
             return builder.ToString();
         }
 
         builder.AppendLine(Colorize($"● 리뷰 대기   Office_{GetBuildNumber():00}   {FormatTime(_count)}", WaitingColor));
-        if (!string.IsNullOrEmpty(_report)) builder.AppendLine(_report);
         builder.AppendLine();
 
         // 로비(원본)에서만 코드 맨 위에 수칙 주석 표시
@@ -677,7 +707,7 @@ public class LoopManager : MonoBehaviour
         if (_currentBuild.LightOverride != LightOverride.None) builder.AppendLine(Colorize($"+   override LightColor => {_currentBuild.LightOverride};", AddedColor));
         if (_currentBuild.HasNoColleague) builder.AppendLine(Colorize("+   override NpcCount => 0;", AddedColor));
         if (_currentBuild.HasNoPlants) builder.AppendLine(Colorize("+   override PlantCount => 0;", AddedColor));
-        if (_currentBuild.IsCabinetOpen) builder.AppendLine(Colorize("+   override CabinetOpen => true;", AddedColor));
+        if (_currentBuild.IsCabinetOpen) builder.AppendLine(Colorize("+   override FileCabinetOpen => true;", AddedColor));
     }
 
     private void AppendRules(StringBuilder builder)

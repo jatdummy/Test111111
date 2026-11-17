@@ -83,7 +83,18 @@ public class Elevator : MonoBehaviour
         SetDisplay(RidingText);
 
         // 문이 다 닫힌 뒤부터 롤백 시간을 셈 (닫히는 도중에 사무실이 바뀌어 보이지 않게)
-        yield return new WaitUntil(() => _door.IsClosed);
+        // 닫히는 도중에 내리면 롤백을 취소함 (밖에서 사무실이 바뀌는 모습이 보이지 않게, 문은 UpdateDoor가 다시 엶)
+        while (!_door.IsClosed)
+        {
+            if (_rider == null)
+            {
+                SetDisplay(IdleText);
+                _isRiding = false;
+                yield break;
+            }
+
+            yield return null;
+        }
         yield return new WaitForSeconds(_closedSeconds);
 
         _loopManager.HandleTrigger(LoopTriggerType.Back, _rider);
