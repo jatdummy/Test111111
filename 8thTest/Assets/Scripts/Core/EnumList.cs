@@ -8,22 +8,6 @@ public enum LoopTriggerType
     Rollback = 4,
 }
 
-// 이상현상 종류
-public enum AnomalyType
-{
-    None = 0,
-    ExtinguisherOnCeiling = 1,
-    LightMismatch = 2,
-    MissingTexturePoster = 3,
-    ColleagueStare = 4,
-    EyesInDoor = 5,
-    BloodWater = 6,
-    WiltedPlant = 7,
-    CabinetDoorOpen = 8,
-    TrashOverflow = 9,
-    WhiteboardMessage = 10,
-}
-
 // 코드에 적히는 조명 색 변경
 public enum LightOverride
 {

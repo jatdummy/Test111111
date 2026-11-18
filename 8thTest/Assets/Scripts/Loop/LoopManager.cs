@@ -9,15 +9,12 @@ public class LoopManager : MonoBehaviour
     private const int ClearCount = 8;
     private const int StartHour = 22;
     private const int HoursPerDay = 24;
-    private const int AnomalyCount = 10;
     private const int MaxNormalStreak = 2;
     private const int MaxBugStreak = 4;
-    private const int MismatchLightIndex = 2;
     private const float NormalBuildChance = 1f / 3f;
     private const float OverrideChance = 0.5f;
     // 미끼 override 종류 수 (빨간 조명, 파란 조명, 동료 없음, 화분 없음, 책장 열림)
     private const int OverrideKindCount = 5;
-    private const float EmissionIntensity = 2f;
 
     // 모니터 글자 색 (리치 텍스트)
     private const string WaitingColor = "#F2C14E";
@@ -59,105 +56,21 @@ public class LoopManager : MonoBehaviour
     [SerializeField] private TextMesh _clockText;
 
     [Header("사무실 오브젝트")]
-    // 천장 형광등 빛
-    [SerializeField] private Light[] _ceilingLights;
-
-    // 천장 형광등 몸체
-    [SerializeField] private Renderer[] _ceilingLightRenderers;
-
-    // 소화기
-    [SerializeField] private Transform _extinguisher;
-
-    // 소화기가 천장에 붙을 때의 높이
-    [SerializeField, Min(0f)] private float _extinguisherCeilingHeight = 2.7f;
-
-    // 천장에 붙을 때 벽에서 떨어뜨리는 거리 (벽에 박히지 않고 천장 면에 보이게)
-    [SerializeField] private Vector3 _extinguisherCeilingInset = new(0f, 0f, -0.3f);
-
-    // 텍스처 누락 이상현상이 나올 포스터
-    [SerializeField] private Renderer _bugPoster;
-
-    // 텍스처 누락 표시용 재질
-    [SerializeField] private Material _missingTextureMaterial;
+    // 천장 형광등 (코드의 조명 색 override)
+    [SerializeField] private OfficeLights _lights;
 
     // 걸어오는 동료
     [SerializeField] private ColleagueWalker _colleague;
 
-    // 눈 이상현상이 나올 문짝의 경첩 축 (문짝과 손잡이가 자식)
-    [SerializeField] private Transform _eyeDoorHinge;
-
-    // 눈 이상현상일 때 문이 안쪽으로 열리는 각도
-    [SerializeField, Range(0f, 90f)] private float _eyeDoorOpenAngle = 20f;
-
-    // 문 틈 안쪽에서 보이는 눈
-    [SerializeField] private GameObject _doorEyes;
-
-    // 정수기에서 흘러나오는 핏물 (줄기, 방울, 웅덩이)
-    [SerializeField] private GameObject _bloodLeak;
-
     // 복도 화분 (override PlantCount => 0 이면 모두 숨김)
     [SerializeField] private GameObject[] _plants;
 
-    // 시드는 이상현상이 나올 화분의 잎
-    [SerializeField] private Renderer _wiltPlantLeaves;
+    // 책장 (override BookcaseOpen, 핫픽스)
+    [SerializeField] private Cabinet _cabinet;
 
-    // 시든 잎 재질
-    [SerializeField] private Material _deadPlantMaterial;
-
-    // 시든 잎 크기 (높이를 줄이고 옆으로 퍼뜨려 주저앉은 모양)
-    [SerializeField] private Vector3 _wiltLeafScale = new(1.15f, 0.55f, 1.15f);
-
-    // 시든 잎이 복도 쪽으로 기우는 각도
-    [SerializeField, Range(0f, 90f)] private float _wiltLeafTilt = 18f;
-
-    // 시든 화분 앞 바닥에 떨어진 마른 잎
-    [SerializeField] private GameObject _fallenLeaves;
-
-    // 책장 문짝들의 경첩 축 (문짝이 자식, 양쪽으로 열리는 여닫이문)
-    [SerializeField] private Transform[] _cabinetDoorHinges;
-
-    // 문짝마다 열리는 각도 (경첩이 양 끝에 있어 서로 부호가 반대)
-    [SerializeField] private float[] _cabinetDoorOpenAngles = { -100f, 100f };
-
-    // 문과 함께 앞으로 빠지는 서랍
-    [SerializeField] private Transform _cabinetDrawer;
-
-    // 서랍이 빠지는 방향과 거리 (월드 기준, 책장 앞쪽)
-    [SerializeField] private Vector3 _cabinetDrawerPull = new(-0.3f, 0f, 0f);
-
-    // 쓰레기통 위와 바닥에 넘친 종이 뭉치
-    [SerializeField] private GameObject _trashOverflow;
-
-    // 화이트보드 회의 메모의 마지막 줄 (이른 시간 이상현상에서 바뀜)
-    [SerializeField] private TextMesh _whiteboardLastLine;
-
-    // 이른 시간 이상현상에서 바뀐 마지막 줄
-    [SerializeField] private string _whiteboardChangedLine = "· 퇴근 없음";
-
-    // 화이트보드에 피로 쓴 글 묶음 (글자와 흘러내린 자국)
-    [SerializeField] private GameObject _bloodWriting;
-
-    // 피로 쓴 글자
-    [SerializeField] private TextMesh _bloodMessage;
-
-    // 피로 쓰는 문구 (나올 때마다 하나를 고름)
-    [SerializeField] private string[] _bloodPhrases =
-    {
-        "제발\n탈출시켜줘",
-        "코드를\n믿지마",
-        "06시는\n오지 않아",
-        "뒤에\n있어",
-        "나도\n승인했었어",
-    };
-
-    // 문구마다 붙는 서명 (_bloodPhrases와 같은 순서, 빈 칸이면 서명 없음)
-    [SerializeField] private string[] _bloodSignatures = { "", "", "- 01", "", "- 07" };
-
-    // 피로 쓴 서명 글자 (서명이 없는 문구면 숨김)
-    [SerializeField] private TextMesh _bloodSignature;
-
-    // 피로 쓴 글이 나오기 시작하는 경과 시간 (22:00 기준, 3이면 01:00)
-    [SerializeField, Range(0, ClearCount - 1)] private int _bloodWritingStartHour = 3;
+    [Header("이상현상")]
+    // 나올 수 있는 이상현상 (각 물건에 붙은 컴포넌트, 루프마다 하나를 골라 켬)
+    [SerializeField] private Anomaly[] _anomalies;
 
     [Header("단말 · 태블릿")]
     // 판정 기록을 남길 검수 로그 단말 (코드판에는 결과를 띄우지 않음)
@@ -193,23 +106,13 @@ public class LoopManager : MonoBehaviour
     [SerializeField] private Color _blueLightColor = new(0.35f, 0.5f, 1f);
 
     private OfficeBuild _currentBuild;
-    private AnomalyType _lastAnomaly;
+    private Anomaly _lastAnomaly;
     private int _count;
     private int _normalStreak;
     private int _bugStreak;
     private bool _isArmed;
     private bool _isCleared;
     private Coroutine _hotfixRoutine;
-    private Vector3 _extinguisherPosition;
-    private Quaternion _extinguisherRotation;
-    private Material[] _posterMaterials;
-    private Quaternion _eyeDoorRotation;
-    private Material _plantLeafMaterial;
-    private Vector3 _plantLeafScale;
-    private Quaternion _plantLeafRotation;
-    private Quaternion[] _cabinetDoorRotations;
-    private Vector3 _cabinetDrawerPosition;
-    private string _whiteboardLine;
 
     // 06:00 이후에는 동료들이 먼저 내려간 뒤에만 엘리베이터를 쓸 수 있음 (퇴근 연출과 문이 겹치지 않게)
     // 밤에는 엘리베이터가 잠겨 있음 (롤백은 이제 내려가는 계단이 맡음, 엘리베이터는 퇴근 전용)
@@ -217,7 +120,6 @@ public class LoopManager : MonoBehaviour
 
     private void Start()
     {
-        CacheOriginals();
         ApplyBuild(CreateOriginalBuild());
 
         // QA 수칙은 코드판이 아니라 출근하자마자 태블릿 수칙 페이지로 보냄
@@ -279,25 +181,6 @@ public class LoopManager : MonoBehaviour
         }
     }
 
-    private void CacheOriginals()
-    {
-        _extinguisherPosition = _extinguisher.position;
-        _extinguisherRotation = _extinguisher.rotation;
-        _posterMaterials = _bugPoster.sharedMaterials;
-        _eyeDoorRotation = _eyeDoorHinge.localRotation;
-        _plantLeafMaterial = _wiltPlantLeaves.sharedMaterial;
-        _plantLeafScale = _wiltPlantLeaves.transform.localScale;
-        _plantLeafRotation = _wiltPlantLeaves.transform.localRotation;
-        _cabinetDoorRotations = new Quaternion[_cabinetDoorHinges.Length];
-        for (int i = 0; i < _cabinetDoorHinges.Length; i++)
-        {
-            _cabinetDoorRotations[i] = _cabinetDoorHinges[i].localRotation;
-        }
-
-        _cabinetDrawerPosition = _cabinetDrawer.position;
-        _whiteboardLine = _whiteboardLastLine.text;
-    }
-
     // 통로에 들어오면 판정 대기 상태로 전환
     private void EnterCorridor(FirstPersonController player)
     {
@@ -346,36 +229,26 @@ public class LoopManager : MonoBehaviour
         var candidates = new List<(HotfixKind Kind, OverrideKind Target)>();
         OfficeBuild build = _currentBuild;
 
-        // 책장 문이 열린 버그를 코드에 반영해 정상으로 만듦
-        if (build.Anomaly == AnomalyType.CabinetDoorOpen)
+        // 이상현상을 코드에 반영해 정상으로 만듦 (책장 문이 열린 버그 → BookcaseOpen 추가)
+        if (build.Anomaly != null && build.Anomaly.Data.CanBeLegitimized)
         {
-            candidates.Add((HotfixKind.Legitimize, OverrideKind.Bookcase));
+            candidates.Add((HotfixKind.Legitimize, build.Anomaly.Data.LegitimizeOverride));
         }
 
-        // 조명 명세 불일치는 Blue 줄이 있어야 성립하므로 조명은 건드리지 않음
-        if (build.Anomaly != AnomalyType.LightMismatch)
+        // 이상현상과 함께 나오면 안 되는 override는 핫픽스로도 바꾸지 않음 (조명 명세 불일치는 Blue 줄이 있어야 성립 등)
+        if (build.LightOverride == LightOverride.None)
         {
-            if (build.LightOverride == LightOverride.None)
-            {
-                candidates.Add((HotfixKind.AddLine, OverrideKind.RedLight));
-                candidates.Add((HotfixKind.AddLine, OverrideKind.BlueLight));
-            }
-            else
-            {
-                candidates.Add((HotfixKind.RemoveLine, build.LightOverride == LightOverride.Red ? OverrideKind.RedLight : OverrideKind.BlueLight));
-            }
+            AddHotfixCandidate(candidates, build, HotfixKind.AddLine, OverrideKind.RedLight);
+            AddHotfixCandidate(candidates, build, HotfixKind.AddLine, OverrideKind.BlueLight);
+        }
+        else
+        {
+            AddHotfixCandidate(candidates, build, HotfixKind.RemoveLine, build.LightOverride == LightOverride.Red ? OverrideKind.RedLight : OverrideKind.BlueLight);
         }
 
-        candidates.Add((build.HasNoColleague ? HotfixKind.RemoveLine : HotfixKind.AddLine, OverrideKind.NoColleague));
-        candidates.Add((build.HasNoPlants ? HotfixKind.RemoveLine : HotfixKind.AddLine, OverrideKind.NoPlants));
-        if (build.IsCabinetOpen)
-        {
-            candidates.Add((HotfixKind.RemoveLine, OverrideKind.Bookcase));
-        }
-        else if (build.Anomaly != AnomalyType.CabinetDoorOpen)
-        {
-            candidates.Add((HotfixKind.AddLine, OverrideKind.Bookcase));
-        }
+        AddHotfixCandidate(candidates, build, build.HasNoColleague ? HotfixKind.RemoveLine : HotfixKind.AddLine, OverrideKind.NoColleague);
+        AddHotfixCandidate(candidates, build, build.HasNoPlants ? HotfixKind.RemoveLine : HotfixKind.AddLine, OverrideKind.NoPlants);
+        AddHotfixCandidate(candidates, build, build.IsCabinetOpen ? HotfixKind.RemoveLine : HotfixKind.AddLine, OverrideKind.Bookcase);
 
         (HotfixKind kind, OverrideKind target) = candidates[Random.Range(0, candidates.Count)];
         _currentBuild.Hotfix = kind;
@@ -391,6 +264,13 @@ public class LoopManager : MonoBehaviour
         UpdateTexts();
         _qaLog.AddLine(Colorize($"[{FormatTime(_count)}] Office_{GetBuildNumber():00}  긴급 핫픽스 배포", HotfixColor));
         _tablet.NotifyCodeChanged();
+    }
+
+    private static void AddHotfixCandidate(List<(HotfixKind Kind, OverrideKind Target)> candidates, OfficeBuild build, HotfixKind kind, OverrideKind target)
+    {
+        if (IsBlocked(build, target)) return;
+
+        candidates.Add((kind, target));
     }
 
     // 핫픽스 내용을 사무실에 바로 반영 (조명 색, 동료, 화분, 책장)
@@ -418,11 +298,11 @@ public class LoopManager : MonoBehaviour
             default:
                 if (isAdded)
                 {
-                    OpenCabinetDoor();
+                    _cabinet.Open();
                 }
                 else
                 {
-                    CloseCabinetDoor();
+                    _cabinet.Close();
                 }
 
                 break;
@@ -439,9 +319,9 @@ public class LoopManager : MonoBehaviour
             case HotfixKind.AddLine:
             case HotfixKind.RemoveLine:
                 // 사무실에도 반영됐으면 핫픽스 줄은 맞고, 원래 이상현상만 따짐
-                return !build.IsHotfixApplied || build.Anomaly != AnomalyType.None;
+                return !build.IsHotfixApplied || build.Anomaly != null;
             default:
-                return build.Anomaly != AnomalyType.None;
+                return build.Anomaly != null;
         }
     }
 
@@ -525,8 +405,10 @@ public class LoopManager : MonoBehaviour
     private string GetMissedLabel()
     {
         bool isHotfixBug = _currentBuild.Hotfix is HotfixKind.AddLine or HotfixKind.RemoveLine && !_currentBuild.IsHotfixApplied;
-        return isHotfixBug ? $"핫픽스 미반영 ({GetOverrideLabel(_currentBuild.HotfixTarget)})" : GetAnomalyLabel(_currentBuild.Anomaly);
+        return isHotfixBug ? $"핫픽스 미반영 ({GetOverrideLabel(_currentBuild.HotfixTarget)})" : GetAnomalyLabel();
     }
+
+    private string GetAnomalyLabel() => _currentBuild.Anomaly == null ? string.Empty : _currentBuild.Anomaly.Data.ReportLabel;
 
     // 정상이었는데 롤백한 경우의 설명
     private string GetNormalLabel()
@@ -571,35 +453,6 @@ public class LoopManager : MonoBehaviour
         }
     }
 
-    private string GetAnomalyLabel(AnomalyType anomaly)
-    {
-        switch (anomaly)
-        {
-            case AnomalyType.ExtinguisherOnCeiling:
-                return "소화기 위치";
-            case AnomalyType.LightMismatch:
-                return $"{MismatchLightIndex + 1}번 조명 색";
-            case AnomalyType.MissingTexturePoster:
-                return "포스터 B 텍스처";
-            case AnomalyType.ColleagueStare:
-                return "동료 시선";
-            case AnomalyType.EyesInDoor:
-                return "회의실 문 틈";
-            case AnomalyType.BloodWater:
-                return "정수기 물";
-            case AnomalyType.WiltedPlant:
-                return "화분 상태";
-            case AnomalyType.CabinetDoorOpen:
-                return "책장 문";
-            case AnomalyType.TrashOverflow:
-                return "쓰레기통";
-            case AnomalyType.WhiteboardMessage:
-                return "화이트보드";
-            default:
-                return string.Empty;
-        }
-    }
-
     private OfficeBuild CreateOriginalBuild() => new OfficeBuild { IsOriginal = true };
 
     private OfficeBuild CreateJudgedBuild()
@@ -621,10 +474,10 @@ public class LoopManager : MonoBehaviour
         _normalStreak = 0;
         build.Anomaly = PickAnomaly();
 
-        // 조명 명세 불일치는 코드에 Blue가 적혀 있어야 성립
-        if (build.Anomaly == AnomalyType.LightMismatch)
+        // 코드에 특정 조명이 적혀 있어야 성립하는 이상현상 (조명 명세 불일치 → Blue)
+        if (build.Anomaly.Data.RequiredLight != LightOverride.None)
         {
-            build.LightOverride = LightOverride.Blue;
+            build.LightOverride = build.Anomaly.Data.RequiredLight;
         }
         else if (Random.value < OverrideChance)
         {
@@ -643,18 +496,21 @@ public class LoopManager : MonoBehaviour
     }
 
     // 직전과 같은 이상현상은 연속으로 내지 않음
-    private AnomalyType PickAnomaly()
+    private Anomaly PickAnomaly()
     {
-        AnomalyType anomaly;
+        Anomaly anomaly;
         do
         {
-            anomaly = (AnomalyType)Random.Range(1, AnomalyCount + 1);
+            anomaly = _anomalies[Random.Range(0, _anomalies.Length)];
         }
-        while (anomaly == _lastAnomaly);
+        while (anomaly == _lastAnomaly && _anomalies.Length > 1);
 
         _lastAnomaly = anomaly;
         return anomaly;
     }
+
+    // 이번 이상현상과 함께 나오면 안 되는 override인지 (이상현상 데이터에 적힌 목록)
+    private static bool IsBlocked(OfficeBuild build, OverrideKind kind) => build.Anomaly != null && build.Anomaly.Data.IsBlocked(kind);
 
     // 미끼 override 하나 추가 (동료 이상현상과 동료 없음은 함께 내지 않음)
     // 화분·책장도 같은 소품의 이상현상과 그 소품을 바꾸는 override는 함께 내지 않음
@@ -666,21 +522,23 @@ public class LoopManager : MonoBehaviour
             switch ((OverrideKind)Random.Range(0, OverrideKindCount))
             {
                 case OverrideKind.RedLight:
+                    if (IsBlocked(build, OverrideKind.RedLight)) continue;
                     build.LightOverride = LightOverride.Red;
                     return;
                 case OverrideKind.BlueLight:
+                    if (IsBlocked(build, OverrideKind.BlueLight)) continue;
                     build.LightOverride = LightOverride.Blue;
                     return;
                 case OverrideKind.NoColleague:
-                    if (build.Anomaly == AnomalyType.ColleagueStare) continue;
+                    if (IsBlocked(build, OverrideKind.NoColleague)) continue;
                     build.HasNoColleague = true;
                     return;
                 case OverrideKind.NoPlants:
-                    if (build.Anomaly == AnomalyType.WiltedPlant) continue;
+                    if (IsBlocked(build, OverrideKind.NoPlants)) continue;
                     build.HasNoPlants = true;
                     return;
                 default:
-                    if (build.Anomaly == AnomalyType.CabinetDoorOpen) continue;
+                    if (IsBlocked(build, OverrideKind.Bookcase)) continue;
                     build.IsCabinetOpen = true;
                     return;
             }
@@ -693,7 +551,11 @@ public class LoopManager : MonoBehaviour
         _currentBuild = build;
         ResetOffice();
         ApplyLightColor(build);
-        ApplyAnomaly(build.Anomaly);
+        if (build.Anomaly != null)
+        {
+            build.Anomaly.Apply(_count);
+        }
+
         _colleague.gameObject.SetActive(!build.HasNoColleague);
         ApplyPropOverrides(build);
         UpdateTexts();
@@ -702,31 +564,20 @@ public class LoopManager : MonoBehaviour
 
     private void ResetOffice()
     {
-        _extinguisher.SetPositionAndRotation(_extinguisherPosition, _extinguisherRotation);
-        _bugPoster.sharedMaterials = _posterMaterials;
+        // 지난 루프의 이상현상을 모두 되돌림 (각자 원래 상태를 기억함)
+        foreach (Anomaly anomaly in _anomalies)
+        {
+            anomaly.Revert();
+        }
+
         _colleague.gameObject.SetActive(true);
         _colleague.ResetWalk(false);
-        _eyeDoorHinge.localRotation = _eyeDoorRotation;
-        _doorEyes.SetActive(false);
-        _bloodLeak.SetActive(false);
         foreach (GameObject plant in _plants)
         {
             plant.SetActive(true);
         }
 
-        _wiltPlantLeaves.sharedMaterial = _plantLeafMaterial;
-        _wiltPlantLeaves.transform.localScale = _plantLeafScale;
-        _wiltPlantLeaves.transform.localRotation = _plantLeafRotation;
-        _fallenLeaves.SetActive(false);
-        for (int i = 0; i < _cabinetDoorHinges.Length; i++)
-        {
-            _cabinetDoorHinges[i].localRotation = _cabinetDoorRotations[i];
-        }
-
-        _cabinetDrawer.position = _cabinetDrawerPosition;
-        _trashOverflow.SetActive(false);
-        _whiteboardLastLine.text = _whiteboardLine;
-        _bloodWriting.SetActive(false);
+        _cabinet.Close();
     }
 
     // 코드에 적힌 소품 override 적용 (화분 없음, 책장 열림)
@@ -742,42 +593,11 @@ public class LoopManager : MonoBehaviour
 
         if (build.IsCabinetOpen)
         {
-            OpenCabinetDoor();
+            _cabinet.Open();
         }
     }
 
-    // 책장 문짝을 양쪽으로 활짝 열고 서랍을 앞으로 빼냄
-    private void OpenCabinetDoor()
-    {
-        for (int i = 0; i < _cabinetDoorHinges.Length; i++)
-        {
-            _cabinetDoorHinges[i].localRotation = _cabinetDoorRotations[i] * Quaternion.Euler(0f, _cabinetDoorOpenAngles[i], 0f);
-        }
-
-        _cabinetDrawer.position = _cabinetDrawerPosition + _cabinetDrawerPull;
-    }
-
-    // 책장 문을 닫고 서랍을 원래대로 (핫픽스로 BookcaseOpen 줄이 지워지고 사무실에도 반영될 때)
-    private void CloseCabinetDoor()
-    {
-        for (int i = 0; i < _cabinetDoorHinges.Length; i++)
-        {
-            _cabinetDoorHinges[i].localRotation = _cabinetDoorRotations[i];
-        }
-
-        _cabinetDrawer.position = _cabinetDrawerPosition;
-    }
-
-    private void ApplyLightColor(OfficeBuild build)
-    {
-        Color color = GetOverrideColor(build.LightOverride);
-        for (int i = 0; i < _ceilingLights.Length; i++)
-        {
-            // 명세 불일치면 한 개만 원래 색으로 남김
-            bool isMismatch = build.Anomaly == AnomalyType.LightMismatch && i == MismatchLightIndex;
-            SetLightColor(i, isMismatch ? _defaultLightColor : color);
-        }
-    }
+    private void ApplyLightColor(OfficeBuild build) => _lights.SetAll(GetOverrideColor(build.LightOverride));
 
     private Color GetOverrideColor(LightOverride lightOverride)
     {
@@ -790,97 +610,6 @@ public class LoopManager : MonoBehaviour
             default:
                 return _defaultLightColor;
         }
-    }
-
-    // 빛과 함께 형광등의 발광 재질만 색 변경 (몸체 재질은 그대로)
-    private void SetLightColor(int index, Color color)
-    {
-        _ceilingLights[index].color = color;
-        foreach (Material material in _ceilingLightRenderers[index].materials)
-        {
-            if (!material.IsKeywordEnabled("_EMISSION")) continue;
-
-            material.SetColor("_BaseColor", color);
-            material.SetColor("_EmissionColor", color * EmissionIntensity);
-        }
-    }
-
-    // 텍스처 누락처럼 모든 재질을 분홍색으로
-    private void SetMissingTexture(Renderer target)
-    {
-        var materials = new Material[target.sharedMaterials.Length];
-        for (int i = 0; i < materials.Length; i++)
-        {
-            materials[i] = _missingTextureMaterial;
-        }
-
-        target.sharedMaterials = materials;
-    }
-
-    private void ApplyAnomaly(AnomalyType anomaly)
-    {
-        switch (anomaly)
-        {
-            case AnomalyType.ExtinguisherOnCeiling:
-                Vector3 ceilingPosition = new(_extinguisherPosition.x, _extinguisherCeilingHeight, _extinguisherPosition.z);
-                // 앞뒤(Z축) 기준으로 뒤집어야 벽 쪽으로 넘어가지 않음
-                _extinguisher.SetPositionAndRotation(ceilingPosition + _extinguisherCeilingInset, _extinguisherRotation * Quaternion.Euler(0f, 0f, 180f));
-                break;
-            case AnomalyType.MissingTexturePoster:
-                SetMissingTexture(_bugPoster);
-                break;
-            case AnomalyType.ColleagueStare:
-                _colleague.ResetWalk(true);
-                break;
-            case AnomalyType.EyesInDoor:
-                // 문이 살짝 열리고 틈 안쪽에서 눈이 보임
-                _eyeDoorHinge.localRotation = _eyeDoorRotation * Quaternion.Euler(0f, _eyeDoorOpenAngle, 0f);
-                _doorEyes.SetActive(true);
-                break;
-            case AnomalyType.BloodWater:
-                _bloodLeak.SetActive(true);
-                break;
-            case AnomalyType.WiltedPlant:
-                // 화분 하나만 잎이 갈색으로 시듦
-                _wiltPlantLeaves.sharedMaterial = _deadPlantMaterial;
-                // 잎이 주저앉고 복도 쪽으로 기울며, 바닥에 마른 잎이 떨어져 있음
-                _wiltPlantLeaves.transform.localScale = Vector3.Scale(_plantLeafScale, _wiltLeafScale);
-                _wiltPlantLeaves.transform.localRotation = _plantLeafRotation * Quaternion.Euler(_wiltLeafTilt, 0f, 0f);
-                _fallenLeaves.SetActive(true);
-                break;
-            case AnomalyType.CabinetDoorOpen:
-                // 코드에 BookcaseOpen이 없는데 책장 문이 열려 있음
-                OpenCabinetDoor();
-                break;
-            case AnomalyType.TrashOverflow:
-                _trashOverflow.SetActive(true);
-                break;
-            case AnomalyType.WhiteboardMessage:
-                // 01:00 전에는 메모 한 줄만 슬쩍 바뀌고, 01:00부터는 피로 쓴 글
-                if (_count < _bloodWritingStartHour)
-                {
-                    _whiteboardLastLine.text = _whiteboardChangedLine;
-                }
-                else
-                {
-                    ShowBloodWriting();
-                }
-
-                break;
-        }
-    }
-
-    // 화이트보드에 피로 쓴 글 (매번 다른 문구)
-    private void ShowBloodWriting()
-    {
-        int index = Random.Range(0, _bloodPhrases.Length);
-        _bloodMessage.text = _bloodPhrases[index];
-
-        // 서명은 문구를 쓴 사람마다 다르고, 없는 문구도 있음
-        string signature = index < _bloodSignatures.Length ? _bloodSignatures[index] : string.Empty;
-        _bloodSignature.text = signature;
-        _bloodSignature.gameObject.SetActive(!string.IsNullOrEmpty(signature));
-        _bloodWriting.SetActive(true);
     }
 
     // 가까이 가야 모니터 글자가 켜짐
@@ -1007,7 +736,7 @@ public class LoopManager : MonoBehaviour
         public bool HasNoColleague;
         public bool HasNoPlants;
         public bool IsCabinetOpen;
-        public AnomalyType Anomaly;
+        public Anomaly Anomaly;
 
         // 근무 중 배포된 긴급 핫픽스 (사무실은 그대로, 코드만 바뀜)
         public HotfixKind Hotfix;

@@ -13206,66 +13206,24 @@ MonoBehaviour:
   - {fileID: 1688439929}
   - {fileID: 1904995820}
   _clockText: {fileID: 800076822}
-  _ceilingLights:
-  - {fileID: 790296721}
-  - {fileID: 1695140419}
-  - {fileID: 1722489747}
-  - {fileID: 1628783397}
-  - {fileID: 1131501844}
-  - {fileID: 1469477098}
-  _ceilingLightRenderers:
-  - {fileID: 1500618640}
-  - {fileID: 1204391844}
-  - {fileID: 1245933472}
-  - {fileID: 1299009375}
-  - {fileID: 353461997}
-  - {fileID: 2126591067}
-  _extinguisher: {fileID: 813153819}
-  _extinguisherCeilingHeight: 3.2580001
-  _extinguisherCeilingInset: {x: 0, y: 0, z: -0.3}
-  _bugPoster: {fileID: 1957585151}
-  _missingTextureMaterial: {fileID: 2100000, guid: 266159291a05f894da64392446eb6964, type: 2}
+  _lights: {fileID: 1589246913}
   _colleague: {fileID: 629166857}
-  _eyeDoorHinge: {fileID: 786123022}
-  _eyeDoorOpenAngle: 40
-  _doorEyes: {fileID: 408122228}
-  _bloodLeak: {fileID: 446854118}
   _plants:
   - {fileID: 1728172639}
   - {fileID: 1522736158}
   - {fileID: 163564918}
-  _wiltPlantLeaves: {fileID: 1522736157}
-  _deadPlantMaterial: {fileID: 2100000, guid: 3858b4f6985c6aa449e7f0d970164efa, type: 2}
-  _wiltLeafScale: {x: 1.15, y: 0.55, z: 1.15}
-  _wiltLeafTilt: 18
-  _fallenLeaves: {fileID: 1197320414}
-  _cabinetDoorHinges:
-  - {fileID: 541182670}
-  - {fileID: 1360221039}
-  _cabinetDoorOpenAngles:
-  - -100
-  - 100
-  _cabinetDrawer: {fileID: 6575260463990342506}
-  _cabinetDrawerPull: {x: -0.3, y: 0, z: 0}
-  _trashOverflow: {fileID: 602553388}
-  _whiteboardLastLine: {fileID: 416826618}
-  _whiteboardChangedLine: "\xB7 \uD1F4\uADFC \uC5C6\uC74C"
-  _bloodWriting: {fileID: 299543462}
-  _bloodMessage: {fileID: 1859653433}
-  _bloodPhrases:
-  - "\uC81C\uBC1C\n\uD0C8\uCD9C\uC2DC\uCF1C\uC918"
-  - "\uCF54\uB4DC\uB97C\n\uBBFF\uC9C0\uB9C8"
-  - "06\uC2DC\uB294\n\uC624\uC9C0 \uC54A\uC544"
-  - "\uB4A4\uC5D0\n\uC788\uC5B4"
-  - "\uB098\uB3C4\n\uC2B9\uC778\uD588\uC5C8\uC5B4"
-  _bloodSignatures:
-  - 
-  - 
-  - '- 01'
-  - 
-  - '- 07'
-  _bloodSignature: {fileID: 1779293048}
-  _bloodWritingStartHour: 3
+  _cabinet: {fileID: 3081406813408042652}
+  _anomalies:
+  - {fileID: 1990076243}
+  - {fileID: 1589246912}
+  - {fileID: 1957585155}
+  - {fileID: 629166864}
+  - {fileID: 1731704247}
+  - {fileID: 1856734298}
+  - {fileID: 1522736161}
+  - {fileID: 3081406813408042651}
+  - {fileID: 1645899074}
+  - {fileID: 1052355202}
   _qaLog: {fileID: 361632622}
   _tablet: {fileID: 18698499}
   _hotfixChance: 0.3
@@ -15262,6 +15220,11 @@ MeshFilter:
 Transform:
   m_CorrespondingSourceObject: {fileID: 545725691067051005, guid: 475a2cd28a6ea524eb3143889c1b8007, type: 3}
   m_PrefabInstance: {fileID: 629166853}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &165572802 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1150179515046753394, guid: 642e74ba5e6077c42a2ac8053a1871f6, type: 3}
+  m_PrefabInstance: {fileID: 1957585150}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &167303751
 GameObject:
@@ -40142,6 +40105,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8560999318870770044, guid: 475a2cd28a6ea524eb3143889c1b8007, type: 3}
       insertIndex: -1
       addedObject: {fileID: 629166862}
+    - targetCorrespondingSourceObject: {fileID: 8560999318870770044, guid: 475a2cd28a6ea524eb3143889c1b8007, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 629166864}
   m_SourcePrefab: {fileID: 100100000, guid: 475a2cd28a6ea524eb3143889c1b8007, type: 3}
 --- !u!1 &629166854 stripped
 GameObject:
@@ -40231,6 +40197,20 @@ MonoBehaviour:
   _fingerRestAngle: 24
   _fingerTapAngle: 10
   _tapsPerSecond: 3
+--- !u!114 &629166864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 629166854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18de8e0b185184d4188149c8e9d97738, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ColleagueStareAnomaly
+  _data: {fileID: 11400000, guid: f63d4b47a258e7545aefe762d4139a78, type: 2}
+  _colleague: {fileID: 629166857}
 --- !u!1 &630035830
 GameObject:
   m_ObjectHideFlags: 0
@@ -49129,7 +49109,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3615222093165035910, guid: 560c38287d8a42945bedba70bf2aec30, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1990076243}
   m_SourcePrefab: {fileID: 100100000, guid: 560c38287d8a42945bedba70bf2aec30, type: 3}
 --- !u!4 &813153819 stripped
 Transform:
@@ -65918,6 +65901,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1052355201}
+  - component: {fileID: 1052355202}
   m_Layer: 0
   m_Name: Whiteboard
   m_TagString: Untagged
@@ -65946,6 +65930,37 @@ Transform:
   - {fileID: 1527550415}
   m_Father: {fileID: 788200670}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1052355202
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1052355200}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72d0a21da85eb5243a323f16f336414c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WhiteboardAnomaly
+  _data: {fileID: 11400000, guid: 2e8dc3b832c46f446a3df4bd6ac3a504, type: 2}
+  _lastLine: {fileID: 416826618}
+  _changedLine: "\xB7 \uD1F4\uADFC \uC5C6\uC74C"
+  _bloodWriting: {fileID: 299543462}
+  _bloodMessage: {fileID: 1859653433}
+  _bloodSignature: {fileID: 1779293048}
+  _bloodPhrases:
+  - "\uC81C\uBC1C\n\uD0C8\uCD9C\uC2DC\uCF1C\uC918"
+  - "\uCF54\uB4DC\uB97C\n\uBBFF\uC9C0\uB9C8"
+  - "06\uC2DC\uB294\n\uC624\uC9C0 \uC54A\uC544"
+  - "\uB4A4\uC5D0\n\uC788\uC5B4"
+  - "\uB098\uB3C4\n\uC2B9\uC778\uD588\uC5C8\uC5B4"
+  _bloodSignatures:
+  - 
+  - 
+  - '- 01'
+  - 
+  - '- 07'
+  _bloodStartHour: 3
 --- !u!1 &1054595182
 GameObject:
   m_ObjectHideFlags: 0
@@ -95714,7 +95729,10 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7274083872921183197, guid: bf5539d53b4313a419d03b87d37d8bbe, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1197320415}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6243539818513559158, guid: bf5539d53b4313a419d03b87d37d8bbe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1522736161}
   m_SourcePrefab: {fileID: 100100000, guid: bf5539d53b4313a419d03b87d37d8bbe, type: 3}
 --- !u!4 &1522736156 stripped
 Transform:
@@ -95731,6 +95749,24 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 6243539818513559158, guid: bf5539d53b4313a419d03b87d37d8bbe, type: 3}
   m_PrefabInstance: {fileID: 1522736155}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1522736161
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1522736158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ade9e530f62f8f34d98257ab46b1977b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WiltedPlantAnomaly
+  _data: {fileID: 11400000, guid: 0810686379416da4e988ce6442e6215b, type: 2}
+  _leaves: {fileID: 1522736157}
+  _deadMaterial: {fileID: 2100000, guid: 3858b4f6985c6aa449e7f0d970164efa, type: 2}
+  _wiltScale: {x: 1.15, y: 0.55, z: 1.15}
+  _wiltTilt: 18
+  _fallenLeaves: {fileID: 1197320414}
 --- !u!1 &1527254882
 GameObject:
   m_ObjectHideFlags: 0
@@ -104303,6 +104339,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1589246911}
+  - component: {fileID: 1589246913}
+  - component: {fileID: 1589246912}
   m_Layer: 0
   m_Name: CeilingLights
   m_TagString: Untagged
@@ -104331,6 +104369,48 @@ Transform:
   - {fileID: 264775956}
   m_Father: {fileID: 704515646}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1589246912
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1589246910}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f123abbb321b97478786409d7cdecd2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LightMismatchAnomaly
+  _data: {fileID: 11400000, guid: 93f841e86e3b5b848890dab1aeb0f015, type: 2}
+  _lights: {fileID: 1589246913}
+  _lightIndex: 2
+  _originalColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &1589246913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1589246910}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fd79c4853ab8b242ac44ad0dd3c5385, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OfficeLights
+  _lights:
+  - {fileID: 790296721}
+  - {fileID: 1695140419}
+  - {fileID: 1722489747}
+  - {fileID: 1628783397}
+  - {fileID: 1131501844}
+  - {fileID: 1469477098}
+  _lampRenderers:
+  - {fileID: 1500618640}
+  - {fileID: 1204391844}
+  - {fileID: 1245933472}
+  - {fileID: 1299009375}
+  - {fileID: 353461997}
+  - {fileID: 2126591067}
 --- !u!1 &1589483460
 GameObject:
   m_ObjectHideFlags: 0
@@ -107752,6 +107832,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1645899073}
+  - component: {fileID: 1645899074}
   m_Layer: 0
   m_Name: TrashCan
   m_TagString: Untagged
@@ -107776,6 +107857,20 @@ Transform:
   - {fileID: 602553389}
   m_Father: {fileID: 788200670}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1645899074
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1645899072}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92405f79587801c4cae6c76c1ce307d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ActivateObjectAnomaly
+  _data: {fileID: 11400000, guid: 84d28d2eb70c9404f9b89096d27d085e, type: 2}
+  _target: {fileID: 602553388}
 --- !u!1 &1646601548
 GameObject:
   m_ObjectHideFlags: 0
@@ -113058,6 +113153,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1731704246}
+  - component: {fileID: 1731704247}
   m_Layer: 0
   m_Name: Door_Meeting
   m_TagString: Untagged
@@ -113085,6 +113181,22 @@ Transform:
   - {fileID: 408122230}
   m_Father: {fileID: 686253541}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1731704247
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1731704245}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da97fda111321104a8b7366ad427baff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EyesInDoorAnomaly
+  _data: {fileID: 11400000, guid: 3225960328aaee147a360f220a34b39b, type: 2}
+  _hinge: {fileID: 786123022}
+  _openAngle: 40
+  _eyes: {fileID: 408122228}
 --- !u!1 &1733762404
 GameObject:
   m_ObjectHideFlags: 0
@@ -118884,6 +118996,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1856734297}
+  - component: {fileID: 1856734298}
   m_Layer: 0
   m_Name: WaterDispenser
   m_TagString: Untagged
@@ -118918,6 +119031,20 @@ Transform:
   - {fileID: 446854119}
   m_Father: {fileID: 788200670}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1856734298
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1856734296}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92405f79587801c4cae6c76c1ce307d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ActivateObjectAnomaly
+  _data: {fileID: 11400000, guid: 5215dead407a4cc4aae36d2983f9cf75, type: 2}
+  _target: {fileID: 446854118}
 --- !u!1 &1857037363
 GameObject:
   m_ObjectHideFlags: 0
@@ -124897,7 +125024,10 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1150179515046753406, guid: 642e74ba5e6077c42a2ac8053a1871f6, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2006060317}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1150179515046753394, guid: 642e74ba5e6077c42a2ac8053a1871f6, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1957585155}
   m_SourcePrefab: {fileID: 100100000, guid: 642e74ba5e6077c42a2ac8053a1871f6, type: 3}
 --- !u!23 &1957585151 stripped
 MeshRenderer:
@@ -124909,6 +125039,21 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1150179515046753406, guid: 642e74ba5e6077c42a2ac8053a1871f6, type: 3}
   m_PrefabInstance: {fileID: 1957585150}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1957585155
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 165572802}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d5ef2d427215cd48b714f9f6ffe7854, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MissingTextureAnomaly
+  _data: {fileID: 11400000, guid: d15edac3fe4013a468448bb38eec7ba6, type: 2}
+  _target: {fileID: 1957585151}
+  _missingMaterial: {fileID: 2100000, guid: 266159291a05f894da64392446eb6964, type: 2}
 --- !u!1 &1959510660
 GameObject:
   m_ObjectHideFlags: 0
@@ -127051,6 +127196,26 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1989622605}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1990076242 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3615222093165035910, guid: 560c38287d8a42945bedba70bf2aec30, type: 3}
+  m_PrefabInstance: {fileID: 813153818}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1990076243
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1990076242}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 049cefc6b4dcb584b9eeb20d02f2f745, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExtinguisherOnCeilingAnomaly
+  _data: {fileID: 11400000, guid: 8fb57933288c6a849b3d91f0f411db1b, type: 2}
+  _ceilingHeight: 3.2580001
+  _ceilingInset: {x: 0, y: 0, z: -0.3}
 --- !u!1 &1990181093
 GameObject:
   m_ObjectHideFlags: 0
@@ -134673,6 +134838,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3081406813408042650}
+  - component: {fileID: 3081406813408042652}
+  - component: {fileID: 3081406813408042651}
   m_Layer: 0
   m_Name: Cabinet
   m_TagString: Untagged
@@ -134736,6 +134903,40 @@ Transform:
   - {fileID: 1360221039}
   m_Father: {fileID: 732564360}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3081406813408042651
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2416334612609877024}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f06bf3a53aa10bf42b5dd5f982dd148b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CabinetDoorOpenAnomaly
+  _data: {fileID: 11400000, guid: e50ec69d8d6d2ca4996e78493c61c7ca, type: 2}
+  _cabinet: {fileID: 3081406813408042652}
+--- !u!114 &3081406813408042652
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2416334612609877024}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8261c831e56013448a67cdf9946edb7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Cabinet
+  _doorHinges:
+  - {fileID: 541182670}
+  - {fileID: 1360221039}
+  _doorOpenAngles:
+  - -100
+  - 100
+  _drawer: {fileID: 6575260463990342506}
+  _drawerPull: {x: -0.3, y: 0, z: 0}
 --- !u!64 &3263388267342133576
 MeshCollider:
   m_ObjectHideFlags: 0
