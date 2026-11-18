@@ -5,6 +5,7 @@ public enum LoopTriggerType
     CorridorEnter = 1,
     Forward = 2,
     Back = 3,
+    Rollback = 4,    // 롤백 계단을 내려가다 통과 (밤 사이클의 '뒤로')
 }
 
 // 이상현상 종류

@@ -38,8 +38,8 @@ public class LoopManager : MonoBehaviour
     private static readonly string[] RuleLines =
     {
         "1. 코드는 틀리지 않습니다. 틀리는 것은 사무실입니다.",
-        "2. 코드와 다르다면, 엘리베이터를 타십시오.",
-        "3. 코드와 같다면, 계단으로 가십시오.",
+        "2. 코드와 다르다면, 계단을 내려가십시오.",
+        "3. 코드와 같다면, 계단을 올라가십시오.",
         "4. 코드는 긴급 수정될 수 있습니다. 1번을 기억하십시오.",
         "5. 버그 리포트는 컴퓨터에서. 세 번까지만.",
         "6. 06:00이 되면 퇴근하셔도 좋습니다.",
@@ -48,6 +48,9 @@ public class LoopManager : MonoBehaviour
     [Header("루프")]
     // 앞으로 통과했을 때 플레이어를 옮길 거리
     [SerializeField] private Vector3 _forwardTeleportOffset = new(-27.2f, -3.2f, -6.2f);
+
+    // 롤백 계단을 내려가다 통과했을 때 플레이어를 옮길 거리 (롤백 계단실 → 시작 계단실 위층)
+    [SerializeField] private Vector3 _rollbackTeleportOffset = new(-7.4f, 3.2f, 0f);
 
     // 플레이어 (모니터 켜짐 거리 계산용)
     [SerializeField] private Transform _player;
@@ -227,8 +230,8 @@ public class LoopManager : MonoBehaviour
     }
 
     // 06:00 이후에는 동료들이 먼저 내려간 뒤에만 엘리베이터를 쓸 수 있음 (퇴근 연출과 문이 겹치지 않게)
-    // 밤에는 통로에 들어와 판정 대기 중일 때만 롤백할 수 있음 (로비에서 타면 아무 일도 안 일어나는 것 방지)
-    public bool CanUseElevator => _isCleared ? _ending.CanLeave : _isArmed;
+    // 밤에는 엘리베이터가 잠겨 있음 (롤백은 이제 내려가는 계단이 맡음, 엘리베이터는 퇴근 전용)
+    public bool CanUseElevator => _isCleared && _ending.CanLeave;
 
     private void Update() => UpdateMonitorWake();
 
@@ -239,6 +242,10 @@ public class LoopManager : MonoBehaviour
         if (_isCleared)
         {
             if (type == LoopTriggerType.Back && _ending.CanLeave) ReturnToNight();
+
+            // 계단으로 가도 갇히지 않게 이동만 시킴 (판정 없음)
+            if (type == LoopTriggerType.Forward) player.Teleport(_forwardTeleportOffset);
+            if (type == LoopTriggerType.Rollback) player.Teleport(_rollbackTeleportOffset);
             return;
         }
 
@@ -255,6 +262,11 @@ public class LoopManager : MonoBehaviour
             case LoopTriggerType.Back:
                 if (!_isArmed) return;
                 Judge(false);
+                break;
+            case LoopTriggerType.Rollback:
+                // 판정 대기 중일 때만 판정하고, 이동은 항상 함 (계단 끝 가짜 문 앞에 갇히지 않게)
+                if (_isArmed) Judge(false);
+                player.Teleport(_rollbackTeleportOffset);
                 break;
         }
     }

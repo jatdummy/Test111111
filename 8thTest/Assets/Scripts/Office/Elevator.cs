@@ -6,8 +6,11 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(BoxCollider))]
 public class Elevator : MonoBehaviour
 {
-    private const string IdleText = "◀ 롤백";
-    private const string RidingText = "◀ 롤백 중…";
+    private const string IdleText = "▼ 퇴근";
+    private const string RidingText = "▼ 내려가는 중…";
+
+    // 밤 동안 (06:00 전) 표시 — 엘리베이터는 퇴근 전용이라 잠겨 있음
+    private const string LockedText = "운행 중지";
 
     // 문이 닫혀 있는 시간(초)
     [SerializeField] private float _closedSeconds = 1.5f;
@@ -43,12 +46,15 @@ public class Elevator : MonoBehaviour
         _door = _doorPanel.GetComponent<SlidingDoor>();
     }
 
-    private void Start() => SetDisplay(IdleText);
+    private void Start() => SetDisplay(LockedText);
 
     private void Update()
     {
         TryRide();
         UpdateDoor();
+
+        // 타는 중이 아니면 퇴근 가능 여부에 맞춰 표시를 바꿈
+        if (!_isRiding) SetDisplay(_loopManager.CanUseElevator ? IdleText : LockedText);
     }
 
     // 퇴근 연출에서 동료들이 타는 동안 문을 열어 둠
