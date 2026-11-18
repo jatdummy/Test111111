@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// 엘리베이터 호출 (뒤로 = 롤백), 문이 닫힌 동안 사무실을 다시 빌드
+// 06:00 이후 퇴근용 엘리베이터: 타고 E를 누르면 문이 닫힌 뒤 퇴근 처리 (밤에는 잠김)
 [RequireComponent(typeof(BoxCollider))]
 public class Elevator : MonoBehaviour
 {
@@ -18,10 +18,10 @@ public class Elevator : MonoBehaviour
     // 닫혔을 때 보이는 문짝
     [SerializeField] private GameObject _doorPanel;
 
-    // 판정을 알릴 루프 관리자
+    // 퇴근 가능 여부를 묻고 퇴근을 알릴 루프 관리자
     [SerializeField] private LoopManager _loopManager;
 
-    // 엘리베이터 안 표시창 (타는 동안 롤백 진행 표시)
+    // 엘리베이터 표시창 (퇴근 / 내려가는 중 / 운행 중지)
     [SerializeField] private TextMesh _display;
 
     // 플레이어 (문 앞에 왔는지 확인용)
@@ -30,7 +30,9 @@ public class Elevator : MonoBehaviour
     // 문 앞에서 이 거리 안에 들어오면 문이 열림
     [SerializeField] private float _callDistance = 2.2f;
 
-    private InputAction _interactAction;
+    // 타기 (Player/Interact)
+    [SerializeField] private InputActionReference _interactAction;
+
     private FirstPersonController _rider;
     private bool _isRiding;
     private SlidingDoor _door;
@@ -42,7 +44,6 @@ public class Elevator : MonoBehaviour
 
     private void Awake()
     {
-        _interactAction = InputSystem.actions.FindAction("Player/Interact");
         _door = _doorPanel.GetComponent<SlidingDoor>();
     }
 
@@ -86,7 +87,7 @@ public class Elevator : MonoBehaviour
     {
         if (_rider == null || _isRiding) return;
         if (!_loopManager.CanUseElevator) return;
-        if (!_interactAction.WasPressedThisFrame()) return;
+        if (!_interactAction.action.WasPressedThisFrame()) return;
 
         StartCoroutine(RideRoutine());
     }
@@ -97,8 +98,8 @@ public class Elevator : MonoBehaviour
         _door.Close();
         SetDisplay(RidingText);
 
-        // 문이 다 닫힌 뒤부터 롤백 시간을 셈 (닫히는 도중에 사무실이 바뀌어 보이지 않게)
-        // 닫히는 도중에 내리면 롤백을 취소함 (밖에서 사무실이 바뀌는 모습이 보이지 않게, 문은 UpdateDoor가 다시 엶)
+        // 문이 다 닫힌 뒤부터 퇴근 시간을 셈 (닫히는 도중에 사무실이 바뀌어 보이지 않게)
+        // 닫히는 도중에 내리면 퇴근을 취소함 (밖에서 사무실이 바뀌는 모습이 보이지 않게, 문은 UpdateDoor가 다시 엶)
         while (!_door.IsClosed)
         {
             if (_rider == null)

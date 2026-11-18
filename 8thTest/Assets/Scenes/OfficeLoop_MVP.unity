@@ -1421,6 +1421,10 @@ MonoBehaviour:
   _codeTablet: {fileID: 18698499}
   _lookSensitivity: 0.1
   _cameraPivot: {fileID: 1891525093}
+  _moveAction: {fileID: -1680190386980627800, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  _lookAction: {fileID: -5630151704836100654, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  _sprintAction: {fileID: -7471211009204490832, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  _clickAction: {fileID: 3001919216989983466, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!143 &18698498
 CharacterController:
   m_ObjectHideFlags: 0
@@ -1473,6 +1477,11 @@ MonoBehaviour:
   _pageDots: {fileID: 160853349}
   _notice: {fileID: 1176503778}
   _noticeTitle: {fileID: 923819121}
+  _viewAction: {fileID: -2244083056277956568, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  _codePageAction: {fileID: 5055852470448153080, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  _reportPageAction: {fileID: 6498622869332896727, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  _rulesPageAction: {fileID: 5346671391231150035, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  _scrollAction: {fileID: 6240969308177333660, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!114 &18698500
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13706,6 +13715,7 @@ MonoBehaviour:
   _display: {fileID: 1626373262}
   _player: {fileID: 18698496}
   _callDistance: 2.2
+  _interactAction: {fileID: 1781555164194001046, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!65 &148260109
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -24540,6 +24550,7 @@ MonoBehaviour:
   _shakeAmount: 0.07
   _shakeSeconds: 0.5
   _sparkInterval: {x: 1.2, y: 3.5}
+  _interactAction: {fileID: 1781555164194001046, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!4 &361632623
 Transform:
   m_ObjectHideFlags: 0
@@ -70811,6 +70822,7 @@ MonoBehaviour:
   _panel: {fileID: 1305908816}
   _headBob: {fileID: 18698500}
   _player: {fileID: 18698497}
+  _pauseAction: {fileID: 7727032971491509709, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   _headBobButton: {fileID: 1069174708}
   _headBobKnob: {fileID: 551403757}
   _headBobTrack: {fileID: 1069174707}

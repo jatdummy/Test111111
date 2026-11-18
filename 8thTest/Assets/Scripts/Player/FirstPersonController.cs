@@ -29,10 +29,20 @@ public class FirstPersonController : MonoBehaviour
     // 위아래로 회전하는 카메라 축
     [SerializeField] private Transform _cameraPivot;
 
+    [Header("입력")]
+    // 이동 (Player/Move)
+    [SerializeField] private InputActionReference _moveAction;
+
+    // 시점 (Player/Look)
+    [SerializeField] private InputActionReference _lookAction;
+
+    // 달리기 (Player/Sprint)
+    [SerializeField] private InputActionReference _sprintAction;
+
+    // 커서를 다시 잠그는 클릭 (UI/Click)
+    [SerializeField] private InputActionReference _clickAction;
+
     private CharacterController _controller;
-    private InputAction _moveAction;
-    private InputAction _lookAction;
-    private InputAction _sprintAction;
     private float _pitch;
     private float _verticalVelocity;
 
@@ -63,16 +73,13 @@ public class FirstPersonController : MonoBehaviour
     private void CacheComponents()
     {
         _controller = GetComponent<CharacterController>();
-        _moveAction = InputSystem.actions.FindAction("Player/Move");
-        _lookAction = InputSystem.actions.FindAction("Player/Look");
-        _sprintAction = InputSystem.actions.FindAction("Player/Sprint");
     }
 
     private void Look()
     {
         if (Cursor.lockState != CursorLockMode.Locked) return;
 
-        Vector2 delta = _lookAction.ReadValue<Vector2>() * _lookSensitivity;
+        Vector2 delta = _lookAction.action.ReadValue<Vector2>() * _lookSensitivity;
         transform.Rotate(0f, delta.x, 0f);
         _pitch = Mathf.Clamp(_pitch - delta.y, -MaxPitch, MaxPitch);
         _cameraPivot.localEulerAngles = new Vector3(_pitch, 0f, 0f);
@@ -80,7 +87,7 @@ public class FirstPersonController : MonoBehaviour
 
     private void Move()
     {
-        Vector2 input = _moveAction.ReadValue<Vector2>();
+        Vector2 input = _moveAction.action.ReadValue<Vector2>();
         float speed = GetSpeed();
         Vector3 direction = transform.right * input.x + transform.forward * input.y;
 
@@ -101,14 +108,14 @@ public class FirstPersonController : MonoBehaviour
     {
         if (_codeTablet != null && _codeTablet.IsRaised) return _walkSpeed * _readingSpeedMultiplier;
 
-        return _sprintAction.IsPressed() ? _runSpeed : _walkSpeed;
+        return _sprintAction.action.IsPressed() ? _runSpeed : _walkSpeed;
     }
 
-    // Esc로 커서 해제, 클릭으로 다시 잠금
+    // 클릭으로 커서를 다시 잠금
     private void UpdateCursorLock()
     {
         // (Esc는 이제 일시정지 메뉴가 맡아서 커서를 풀고 잠금)
-        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        if (_clickAction.action.WasPressedThisFrame())
         {
             SetCursorLocked(true);
         }

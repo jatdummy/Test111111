@@ -20,8 +20,9 @@
 
 - Input System 패키지(`com.unity.inputsystem`)를 사용한다. 구 Input Manager는 사용하지 않는다.
 - Player Settings > Active Input Handling = Input System Package (New)
-- 액션 활성화 방식 : project-wide actions (`project-wide actions` / `입력 담당 클래스 : 클래스명`)
+- 액션 활성화 방식 : project-wide actions (일시정지 중 Player 맵 Disable / Enable은 SettingsMenu에서만)
 - 입력 코드 작성 규칙은 `Docs/Code/CodeConvention.md` `8. Unity 작성 원칙`을 따른다.
+
 
 ## 4. 워크플로우 설정
 

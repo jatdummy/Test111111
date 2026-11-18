@@ -10,6 +10,9 @@ public class SettingsMenu : MonoBehaviour
     private const string OffColor = "#6E7681";
     private const float KnobTravel = 22f;
 
+    // 일시정지 동안 끌 액션 맵 (액션 활성화를 바꾸는 곳은 이 클래스뿐, TechSpec 3장)
+    private const string PlayerMapName = "Player";
+
     // 메뉴 전체 (평소엔 꺼져 있음)
     [SerializeField] private GameObject _panel;
 
@@ -18,6 +21,9 @@ public class SettingsMenu : MonoBehaviour
 
     // 메뉴가 열린 동안 멈출 플레이어
     [SerializeField] private FirstPersonController _player;
+
+    // 메뉴 열기 / 닫기 (UI/Cancel, Esc)
+    [SerializeField] private InputActionReference _pauseAction;
 
     [Header("스위치")]
     // 헤드밥 스위치 (누르는 부분, 손잡이, 바탕, 상태 글자)
@@ -34,7 +40,7 @@ public class SettingsMenu : MonoBehaviour
 
     private void Awake()
     {
-        _playerActions = InputSystem.actions.FindActionMap("Player");
+        _playerActions = InputSystem.actions.FindActionMap(PlayerMapName);
         _headBobButton.onClick.AddListener(ToggleHeadBob);
     }
 
@@ -47,7 +53,7 @@ public class SettingsMenu : MonoBehaviour
 
     private void Update()
     {
-        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (_pauseAction.action.WasPressedThisFrame())
         {
             SetOpen(!_isOpen);
         }

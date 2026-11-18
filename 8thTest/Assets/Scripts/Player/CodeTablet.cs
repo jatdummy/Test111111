@@ -3,8 +3,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-// Tab을 누르고 있는 동안 코드를 보여 주는 태블릿을 들어 올림
-// (지금은 Tab을 한 번 누르면 들고, 다시 누르면 내리는 방식)
+// Tab을 누를 때마다 들고 내리는 태블릿 (코드 / 리포트 / 수칙 페이지)
 public class CodeTablet : MonoBehaviour
 {
     private const string ActiveTabColor = "#E6E6E6";
@@ -74,7 +73,18 @@ public class CodeTablet : MonoBehaviour
     // 알림 제목 (새 리포트 / 긴급 핫픽스 / QA 수칙)
     [SerializeField] private Text _noticeTitle;
 
-    private InputAction _viewAction;
+    [Header("입력")]
+    // 들기 / 내리기 (Player/CodeView)
+    [SerializeField] private InputActionReference _viewAction;
+
+    // 페이지 바로 가기 (Player/TabletCode, TabletReport, TabletRules)
+    [SerializeField] private InputActionReference _codePageAction;
+    [SerializeField] private InputActionReference _reportPageAction;
+    [SerializeField] private InputActionReference _rulesPageAction;
+
+    // 페이지 넘기기 휠 (UI/ScrollWheel)
+    [SerializeField] private InputActionReference _scrollAction;
+
     private int _page;
     private bool _hasUnread;
     private bool _hasNewCode;
@@ -91,11 +101,6 @@ public class CodeTablet : MonoBehaviour
     // 조금이라도 들려 있으면 태블릿을 보는 중
     public bool IsRaised => _progress > 0f;
 
-    private void Awake()
-    {
-        _viewAction = InputSystem.actions.FindAction("Player/CodeView");
-    }
-
     private void Start()
     {
         _reportText.text = NoReportText;
@@ -106,7 +111,7 @@ public class CodeTablet : MonoBehaviour
     private void Update()
     {
         // 누르고 있는 동안이 아니라, 누를 때마다 들고 내림
-        if (_viewAction.WasPressedThisFrame())
+        if (_viewAction.action.WasPressedThisFrame())
         {
             _isOpen = !_isOpen;
         }
@@ -187,26 +192,22 @@ public class CodeTablet : MonoBehaviour
     // 든 동안 마우스 휠로 이전 · 다음 페이지, 숫자 1 · 2 · 3으로 바로 가기
     private void UpdatePageInput()
     {
-        Keyboard keyboard = Keyboard.current;
-        if (keyboard != null)
+        if (_codePageAction.action.WasPressedThisFrame())
         {
-            if (keyboard.digit1Key.wasPressedThisFrame)
-            {
-                ShowPage(CodePage);
-            }
-            else if (keyboard.digit2Key.wasPressedThisFrame)
-            {
-                ShowPage(ReportPage);
-            }
-            else if (keyboard.digit3Key.wasPressedThisFrame)
-            {
-                ShowPage(RulesPage);
-            }
+            ShowPage(CodePage);
+        }
+        else if (_reportPageAction.action.WasPressedThisFrame())
+        {
+            ShowPage(ReportPage);
+        }
+        else if (_rulesPageAction.action.WasPressedThisFrame())
+        {
+            ShowPage(RulesPage);
         }
 
         // 휠은 한 칸씩만 (터치패드처럼 값이 연달아 들어와도 휙휙 넘어가지 않게), 끝에서 멈춤
         _scrollTimer -= Time.deltaTime;
-        float scroll = Mouse.current != null ? Mouse.current.scroll.ReadValue().y : 0f;
+        float scroll = _scrollAction.action.ReadValue<Vector2>().y;
         if (scroll == 0f || _scrollTimer > 0f) return;
 
         int next = Mathf.Clamp(_page + (scroll < 0f ? 1 : -1), 0, PageCount - 1);

@@ -158,16 +158,16 @@ public class QaLogTerminal : MonoBehaviour
     // 부서진 뒤 이따금 불꽃이 튀는 간격(초, 최소 ~ 최대)
     [SerializeField] private Vector2 _sparkInterval = new(1.2f, 3.5f);
 
+    // 리포트 받기 (Player/Interact)
+    [SerializeField] private InputActionReference _interactAction;
+
     private readonly List<string> _lines = new();
-    private InputAction _interactAction;
     private int _sendCount;
     private bool _hasNewFailure;
     private bool _isBusy;
     private bool _isBroken;
     private Material _liveScreenMaterial;
     private Quaternion _monitorRotation;
-
-    private void Awake() => _interactAction = InputSystem.actions.FindAction("Player/Interact");
 
     // 씬이 새로 열릴 때마다(새 판, 엔딩 뒤 다시 시작) 멀쩡한 단말에 횟수도 처음부터
     private void Start()
@@ -192,7 +192,7 @@ public class QaLogTerminal : MonoBehaviour
         // 화면 바로 앞에서 화면을 보고 있어야 [E] 안내가 뜨고 사용할 수 있음
         bool isFacing = isNear && IsFacingScreen();
         UpdatePrompt(isFacing);
-        if (!isFacing || _isBusy || !_interactAction.WasPressedThisFrame()) return;
+        if (!isFacing || _isBusy || !_interactAction.action.WasPressedThisFrame()) return;
 
         // 새로 틀린 판정이 없으면 리포트를 보내지 않고 횟수도 쓰지 않음
         if (!_hasNewFailure) return;
