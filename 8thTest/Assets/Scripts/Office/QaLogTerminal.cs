@@ -26,6 +26,43 @@ public class QaLogTerminal : MonoBehaviour
     private const float GlitchInterval = 0.06f;
     private const int DotCount = 3;
 
+    // 고장 직전 깜빡임 (글자가 꺼질 확률, 화면이 꺼질 확률, 불꽃 확률과 개수, 모니터 떨림 각도)
+    private const float GlitchTextHideChance = 0.25f;
+    private const float GlitchScreenOffChance = 0.3f;
+    private const float GlitchSparkChance = 0.35f;
+    private const int GlitchSparkMin = 2;
+    private const int GlitchSparkMax = 6;
+    private const float GlitchShakeAngle = 1.5f;
+
+    // 터질 때 (섬광 시간, 불꽃 개수, 조각이 퍼지는 정도, 위로 튀는 정도, 힘 배율 범위, 회전 속도)
+    private const float ExplodeFlashSeconds = 0.4f;
+    private const int ExplodeSparkCount = 90;
+    private const float ShardSpread = 0.8f;
+    private const float ShardLift = 0.4f;
+    private const float ShardForceMin = 0.6f;
+    private const float ShardForceMax = 1.2f;
+    private const float ShardSpin = 20f;
+
+    // 모니터 꺾임 (최대로 꺾이는 시점 비율, 그때 꺾이는 배율)
+    private const float KickPeakTime = 0.2f;
+    private const float KickOvershoot = 1.4f;
+
+    // 섬광이 지직거릴 때 가장 어두운 비율
+    private const float FlashFlickerMin = 0.4f;
+
+    // 부서진 뒤 합선 불꽃 (개수 범위, 섬광 세기 배율, 섬광 시간)
+    private const int ShortSparkMin = 6;
+    private const int ShortSparkMax = 16;
+    private const float ShortFlashScale = 0.25f;
+    private const float ShortFlashSeconds = 0.12f;
+
+    // 깨진 글자 (줄 수, 줄 길이 범위, 처음 깨질 확률, 끝까지 늘어나는 확률)
+    private const int GlitchLineCount = 6;
+    private const int GlitchLineMin = 8;
+    private const int GlitchLineMax = 30;
+    private const float GlitchBaseChance = 0.3f;
+    private const float GlitchGrowChance = 0.7f;
+
     // 단말 화면 글자 (큰 상태 글씨)
     [SerializeField] private TextMesh _screenText;
 
@@ -145,7 +182,11 @@ public class QaLogTerminal : MonoBehaviour
         if (_isBroken) return;
 
         bool isNear = Vector3.Distance(_player.position, transform.position) <= _useDistance;
-        if (!_isBusy) SetScreenVisible(isNear);
+        if (!_isBusy)
+        {
+            SetScreenVisible(isNear);
+        }
+
         UpdateScreenAnimation();
 
         // 화면 바로 앞에서 화면을 보고 있어야 [E] 안내가 뜨고 사용할 수 있음
@@ -157,15 +198,39 @@ public class QaLogTerminal : MonoBehaviour
         if (!_hasNewFailure) return;
 
         // 보낼 수 있는 횟수를 다 쓴 뒤에 누르면 고장
-        if (_sendCount >= _maxSends) StartCoroutine(Break());
-        else StartCoroutine(Send());
+        if (_sendCount >= _maxSends)
+        {
+            StartCoroutine(BreakRoutine());
+        }
+        else
+        {
+            StartCoroutine(SendRoutine());
+        }
     }
 
     // 판정이 틀렸음을 알림 (다음 리포트를 받을 수 있게 됨)
     public void MarkFailure()
     {
         _hasNewFailure = true;
-        if (!_isBusy && !_isBroken) ShowIdle();
+        if (!_isBusy && !_isBroken)
+        {
+            ShowIdle();
+        }
+    }
+
+    // 판정 기록 한 줄 추가 (리포트에는 최근 몇 줄만 담김)
+    public void AddLine(string line)
+    {
+        _lines.Add(line);
+        if (_lines.Count > MaxStoredLines)
+        {
+            _lines.RemoveAt(0);
+        }
+
+        if (!_isBusy && !_isBroken)
+        {
+            ShowIdle();
+        }
     }
 
     // 단말 정면 쪽에 서 있고, 카메라가 화면을 바라보는지
@@ -179,20 +244,15 @@ public class QaLogTerminal : MonoBehaviour
         return Vector3.Angle(_cameraPivot.forward, screenCenter - _cameraPivot.position) <= _lookAngle;
     }
 
-    // 판정 기록 한 줄 추가 (리포트에는 최근 몇 줄만 담김)
-    public void AddLine(string line)
-    {
-        _lines.Add(line);
-        if (_lines.Count > MaxStoredLines) _lines.RemoveAt(0);
-        if (!_isBusy && !_isBroken) ShowIdle();
-    }
-
     // 쓸 수 있을 때만 [E] 안내 (전송 중 · 고장 뒤에는 숨김)
     private void UpdatePrompt(bool isNear)
     {
         bool isVisible = isNear && !_isBusy && !_isBroken;
         _prompt.SetActive(isVisible);
-        if (isVisible) _promptText.text = _hasNewFailure ? "버그 리포트 받기" : "버그 리포트 받기  <color=#9AA0A6>(틀린 판정 없음)</color>";
+        if (isVisible)
+        {
+            _promptText.text = _hasNewFailure ? "버그 리포트 받기" : "버그 리포트 받기  <color=#9AA0A6>(틀린 판정 없음)</color>";
+        }
     }
 
     private void ShowIdle()
@@ -226,7 +286,7 @@ public class QaLogTerminal : MonoBehaviour
     }
 
     // 전송 중 점이 하나씩 늘다가, 태블릿에 알림이 가고 전송 완료
-    private IEnumerator Send()
+    private IEnumerator SendRoutine()
     {
         _isBusy = true;
         _prompt.SetActive(false);
@@ -263,14 +323,17 @@ public class QaLogTerminal : MonoBehaviour
         for (int i = start; i < _lines.Count; i++)
         {
             builder.Append(_lines[i]);
-            if (i < _lines.Count - 1) builder.AppendLine();
+            if (i < _lines.Count - 1)
+            {
+                builder.AppendLine();
+            }
         }
 
         return builder.ToString();
     }
 
     // 글자가 깨지며 화면이 깜빡이다가 터짐
-    private IEnumerator Break()
+    private IEnumerator BreakRoutine()
     {
         _isBusy = true;
         _prompt.SetActive(false);
@@ -283,10 +346,14 @@ public class QaLogTerminal : MonoBehaviour
         while (elapsed < _breakSeconds)
         {
             _screenText.text = CreateGlitchText(elapsed / _breakSeconds);
-            _screenText.gameObject.SetActive(Random.value > 0.25f);
-            _screen.sharedMaterial = Random.value > 0.3f ? _liveScreenMaterial : _deadScreenMaterial;
-            if (Random.value < 0.35f) _sparks.Emit(Random.Range(2, 6));
-            _monitor.localRotation = _monitorRotation * Quaternion.Euler(Random.insideUnitSphere * 1.5f);
+            _screenText.gameObject.SetActive(Random.value > GlitchTextHideChance);
+            _screen.sharedMaterial = Random.value > GlitchScreenOffChance ? _liveScreenMaterial : _deadScreenMaterial;
+            if (Random.value < GlitchSparkChance)
+            {
+                _sparks.Emit(Random.Range(GlitchSparkMin, GlitchSparkMax));
+            }
+
+            _monitor.localRotation = _monitorRotation * Quaternion.Euler(Random.insideUnitSphere * GlitchShakeAngle);
             elapsed += GlitchInterval;
             yield return new WaitForSeconds(GlitchInterval);
         }
@@ -295,14 +362,14 @@ public class QaLogTerminal : MonoBehaviour
 
         // 터짐: 유리 조각, 불꽃, 섬광, 모니터가 뒤로 꺾이고 화면이 흔들림
         Explode();
-        StartCoroutine(Kick());
-        StartCoroutine(Flash(_flashIntensity, 0.4f));
-        StartCoroutine(Shake());
+        StartCoroutine(KickRoutine());
+        StartCoroutine(FlashRoutine(_flashIntensity, ExplodeFlashSeconds));
+        StartCoroutine(ShakeRoutine());
     }
 
     private void Explode()
     {
-        _sparks.Emit(90);
+        _sparks.Emit(ExplodeSparkCount);
         Vector3 outward = -_monitor.forward;
         foreach (Rigidbody shard in _shards)
         {
@@ -311,14 +378,14 @@ public class QaLogTerminal : MonoBehaviour
             shard.isKinematic = false;
 
             // 화면 앞쪽으로 흩어지며 떨어짐
-            Vector3 spread = Random.insideUnitSphere * 0.8f + Vector3.up * 0.4f;
-            shard.linearVelocity = (outward + spread) * _shardForce * Random.Range(0.6f, 1.2f);
-            shard.angularVelocity = Random.insideUnitSphere * 20f;
+            Vector3 spread = Random.insideUnitSphere * ShardSpread + Vector3.up * ShardLift;
+            shard.linearVelocity = (outward + spread) * _shardForce * Random.Range(ShardForceMin, ShardForceMax);
+            shard.angularVelocity = Random.insideUnitSphere * ShardSpin;
         }
     }
 
     // 뒤로 확 꺾였다가 반동으로 조금 돌아와 멈춤
-    private IEnumerator Kick()
+    private IEnumerator KickRoutine()
     {
         _monitor.localRotation = _monitorRotation;
         float elapsed = 0f;
@@ -326,7 +393,7 @@ public class QaLogTerminal : MonoBehaviour
         {
             elapsed += Time.deltaTime;
             float t = elapsed / _kickSeconds;
-            float amount = t < 0.2f ? Mathf.Lerp(0f, 1.4f, t / 0.2f) : Mathf.Lerp(1.4f, 1f, Mathf.SmoothStep(0f, 1f, (t - 0.2f) / 0.8f));
+            float amount = t < KickPeakTime ? Mathf.Lerp(0f, KickOvershoot, t / KickPeakTime) : Mathf.Lerp(KickOvershoot, 1f, Mathf.SmoothStep(0f, 1f, (t - KickPeakTime) / (1f - KickPeakTime)));
             _monitor.localRotation = _monitorRotation * Quaternion.Euler(_brokenTilt * amount);
             yield return null;
         }
@@ -335,21 +402,21 @@ public class QaLogTerminal : MonoBehaviour
     }
 
     // 불빛이 지직거리며 꺼짐
-    private IEnumerator Flash(float intensity, float seconds)
+    private IEnumerator FlashRoutine(float intensity, float seconds)
     {
         _flash.enabled = true;
         float elapsed = 0f;
         while (elapsed < seconds)
         {
             elapsed += Time.deltaTime;
-            _flash.intensity = intensity * (1f - elapsed / seconds) * Random.Range(0.4f, 1f);
+            _flash.intensity = intensity * (1f - elapsed / seconds) * Random.Range(FlashFlickerMin, 1f);
             yield return null;
         }
 
         _flash.enabled = false;
     }
 
-    private IEnumerator Shake()
+    private IEnumerator ShakeRoutine()
     {
         Vector3 origin = _cameraPivot.localPosition;
         float elapsed = 0f;
@@ -365,13 +432,13 @@ public class QaLogTerminal : MonoBehaviour
     }
 
     // 부서진 뒤에도 가끔 합선된 듯 불꽃이 튐
-    private IEnumerator SparkNow()
+    private IEnumerator SparkNowRoutine()
     {
         while (true)
         {
             yield return new WaitForSeconds(Random.Range(_sparkInterval.x, _sparkInterval.y));
-            _sparks.Emit(Random.Range(6, 16));
-            yield return Flash(_flashIntensity * 0.25f, 0.12f);
+            _sparks.Emit(Random.Range(ShortSparkMin, ShortSparkMax));
+            yield return FlashRoutine(_flashIntensity * ShortFlashScale, ShortFlashSeconds);
         }
     }
 
@@ -390,7 +457,7 @@ public class QaLogTerminal : MonoBehaviour
         // 꺾인 모니터, 계속 피어오르는 연기, 이따금 튀는 불꽃
         _monitor.localRotation = _monitorRotation * Quaternion.Euler(_brokenTilt);
         _smoke.Play();
-        StartCoroutine(SparkNow());
+        StartCoroutine(SparkNowRoutine());
     }
 
     // 시간이 갈수록 더 많이 깨지는 글자
@@ -398,12 +465,12 @@ public class QaLogTerminal : MonoBehaviour
     {
         var builder = new StringBuilder();
         builder.AppendLine("<color=#FF6B6B>FATAL  QA-ASSIST  0x08</color>");
-        for (int line = 0; line < 6; line++)
+        for (int line = 0; line < GlitchLineCount; line++)
         {
-            int length = Random.Range(8, 30);
+            int length = Random.Range(GlitchLineMin, GlitchLineMax);
             for (int i = 0; i < length; i++)
             {
-                bool isGlitch = Random.value < 0.3f + progress * 0.7f;
+                bool isGlitch = Random.value < GlitchBaseChance + progress * GlitchGrowChance;
                 builder.Append(isGlitch ? GlitchChars[Random.Range(0, GlitchChars.Length)] : (char)Random.Range('a', 'z' + 1));
             }
 

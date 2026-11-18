@@ -76,9 +76,18 @@ public class ColleagueWalker : MonoBehaviour
 
         // 통로에 도착하면 자리로 꺾고, 자리에 도착하면 앉음
         // 문 앞에 도착하면 통로를 따라 자리 앞까지 감
-        if (_target == _endPosition) SitDown();
-        else if (_target == _aislePosition) _target = _endPosition;
-        else _target = _aislePosition;
+        if (_target == _endPosition)
+        {
+            SitDown();
+        }
+        else if (_target == _aislePosition)
+        {
+            _target = _endPosition;
+        }
+        else
+        {
+            _target = _aislePosition;
+        }
     }
 
     // 도착하면 자리에 앉음

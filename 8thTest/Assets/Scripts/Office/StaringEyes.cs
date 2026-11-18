@@ -28,7 +28,10 @@ public class StaringEyes : MonoBehaviour
     private void LateUpdate()
     {
         bool isClosed = Time.time >= _nextBlinkTime;
-        if (Time.time >= _nextBlinkTime + _blinkSeconds) ScheduleBlink();
+        if (Time.time >= _nextBlinkTime + _blinkSeconds)
+        {
+            ScheduleBlink();
+        }
 
         for (int i = 0; i < _eyeballs.Length; i++)
         {

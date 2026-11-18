@@ -11,6 +11,10 @@ public class EndingDirector : MonoBehaviour
     private const float SpeechHeight = 2.05f;
     private const float MinFaceDistance = 0.01f;
 
+    // 사무실 안으로 보는 경계 (이 높이보다 위, 이 z보다 안쪽)
+    private const float OfficeFloorMinY = -0.5f;
+    private const float OfficeMinZ = -3.4f;
+
     [Header("창문")]
     // 창 밖 배경판
     [SerializeField] private Renderer[] _windowOutsides;
@@ -94,7 +98,7 @@ public class EndingDirector : MonoBehaviour
         }
 
         SetMorning(true);
-        StartCoroutine(Farewell());
+        StartCoroutine(FarewellRoutine());
     }
 
     // 엘리베이터를 타고 내려가면 다시 밤 사무실, 잠시 뒤 타이틀로
@@ -111,7 +115,7 @@ public class EndingDirector : MonoBehaviour
             leaver.RestorePose();
         }
 
-        StartCoroutine(FadeToTitle());
+        StartCoroutine(FadeToTitleRoutine());
     }
 
     private void CacheCeilingIntensities()
@@ -142,7 +146,7 @@ public class EndingDirector : MonoBehaviour
         }
     }
 
-    private IEnumerator Farewell()
+    private IEnumerator FarewellRoutine()
     {
         // 플레이어가 계단을 올라와 사무실에 들어올 때까지 기다림
         yield return new WaitUntil(IsPlayerInOffice);
@@ -153,7 +157,7 @@ public class EndingDirector : MonoBehaviour
         int arrivedCount = 0;
         foreach (Leaver leaver in _leavers)
         {
-            StartCoroutine(Leave(leaver, () => arrivedCount++));
+            StartCoroutine(LeaveRoutine(leaver, () => arrivedCount++));
         }
 
         yield return new WaitUntil(() => arrivedCount == _leavers.Length);
@@ -174,15 +178,19 @@ public class EndingDirector : MonoBehaviour
     }
 
     // 계단(바닥 아래)이 아니라 사무실 바닥에 올라와 있으면 사무실 안
-    private bool IsPlayerInOffice() => _player.position.y > -0.5f && _player.position.z > -3.4f;
+    private bool IsPlayerInOffice() => _player.position.y > OfficeFloorMinY && _player.position.z > OfficeMinZ;
 
-    private IEnumerator Leave(Leaver leaver, System.Action onArrived)
+    private IEnumerator LeaveRoutine(Leaver leaver, System.Action onArrived)
     {
         yield return new WaitForSeconds(leaver.StartDelay);
 
         // 앉아 있었다면 일어남
         leaver.Sit.enabled = false;
-        if (leaver.Typing != null) leaver.Typing.enabled = false;
+        if (leaver.Typing != null)
+        {
+            leaver.Typing.enabled = false;
+        }
+
         leaver.Body.position += Vector3.up * leaver.StandRise;
         leaver.Walk.Speed = _walkSpeed;
         leaver.Walk.enabled = true;
@@ -190,16 +198,19 @@ public class EndingDirector : MonoBehaviour
         for (int i = 0; i < leaver.Path.Length; i++)
         {
             // 엘리베이터에 들어가기 직전에 멈춰서 플레이어에게 인사
-            if (i == leaver.Path.Length - 1) yield return Greet(leaver);
+            if (i == leaver.Path.Length - 1)
+            {
+                yield return GreetRoutine(leaver);
+            }
 
-            yield return WalkTo(leaver, leaver.Path[i]);
+            yield return WalkToRoutine(leaver, leaver.Path[i]);
         }
 
         leaver.Walk.enabled = false;
         onArrived();
     }
 
-    private IEnumerator WalkTo(Leaver leaver, Vector3 target)
+    private IEnumerator WalkToRoutine(Leaver leaver, Vector3 target)
     {
         while (leaver.Body.position != target)
         {
@@ -209,7 +220,7 @@ public class EndingDirector : MonoBehaviour
         }
     }
 
-    private IEnumerator Greet(Leaver leaver)
+    private IEnumerator GreetRoutine(Leaver leaver)
     {
         leaver.Walk.enabled = false;
         _speech.text = leaver.Greeting;
@@ -235,7 +246,10 @@ public class EndingDirector : MonoBehaviour
         speech.position = body.position + Vector3.up * SpeechHeight;
         Vector3 direction = speech.position - _player.position;
         direction.y = 0f;
-        if (direction.sqrMagnitude > MinFaceDistance) speech.rotation = Quaternion.LookRotation(direction);
+        if (direction.sqrMagnitude > MinFaceDistance)
+        {
+            speech.rotation = Quaternion.LookRotation(direction);
+        }
     }
 
     private static void Face(Transform body, Vector3 target)
@@ -247,7 +261,7 @@ public class EndingDirector : MonoBehaviour
         body.rotation = Quaternion.LookRotation(direction);
     }
 
-    private IEnumerator FadeToTitle()
+    private IEnumerator FadeToTitleRoutine()
     {
         yield return new WaitForSeconds(_nightHoldSeconds);
 
@@ -319,7 +333,10 @@ public class EndingDirector : MonoBehaviour
             Body.SetPositionAndRotation(_position, _rotation);
             Walk.enabled = false;
             Sit.enabled = _isSitting;
-            if (Typing != null) Typing.enabled = _isTyping;
+            if (Typing != null)
+            {
+                Typing.enabled = _isTyping;
+            }
         }
     }
 }

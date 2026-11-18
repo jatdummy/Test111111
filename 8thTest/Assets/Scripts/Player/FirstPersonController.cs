@@ -85,7 +85,11 @@ public class FirstPersonController : MonoBehaviour
         Vector3 direction = transform.right * input.x + transform.forward * input.y;
 
         // 바닥에 닿아 있으면 낙하 속도 초기화
-        if (_controller.isGrounded && _verticalVelocity < 0f) _verticalVelocity = GroundedVelocity;
+        if (_controller.isGrounded && _verticalVelocity < 0f)
+        {
+            _verticalVelocity = GroundedVelocity;
+        }
+
         _verticalVelocity += Gravity * Time.deltaTime;
 
         Vector3 velocity = direction * speed + Vector3.up * _verticalVelocity;
@@ -104,7 +108,10 @@ public class FirstPersonController : MonoBehaviour
     private void UpdateCursorLock()
     {
         // (Esc는 이제 일시정지 메뉴가 맡아서 커서를 풀고 잠금)
-        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame) SetCursorLocked(true);
+        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            SetCursorLocked(true);
+        }
     }
 
     private void SetCursorLocked(bool isLocked)

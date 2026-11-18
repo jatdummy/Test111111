@@ -47,7 +47,10 @@ public class SettingsMenu : MonoBehaviour
 
     private void Update()
     {
-        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) SetOpen(!_isOpen);
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            SetOpen(!_isOpen);
+        }
     }
 
     // 열면 시간을 멈추고 커서를 풀며, 닫으면 되돌림

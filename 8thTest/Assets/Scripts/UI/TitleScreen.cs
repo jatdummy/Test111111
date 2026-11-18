@@ -16,7 +16,10 @@ public class TitleScreen : MonoBehaviour
 
     private void Update()
     {
-        if (IsStartPressed()) SceneManager.LoadScene(_gameSceneName);
+        if (IsStartPressed())
+        {
+            SceneManager.LoadScene(_gameSceneName);
+        }
     }
 
     private static bool IsStartPressed()

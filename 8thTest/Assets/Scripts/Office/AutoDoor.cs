@@ -36,8 +36,15 @@ public class AutoDoor : MonoBehaviour
         bool isOpen = !_isLocked && distance <= _openDistance;
         if (_slidingDoor != null)
         {
-            if (isOpen) _slidingDoor.Open();
-            else _slidingDoor.Close();
+            if (isOpen)
+            {
+                _slidingDoor.Open();
+            }
+            else
+            {
+                _slidingDoor.Close();
+            }
+
             return;
         }
 
@@ -50,7 +57,13 @@ public class AutoDoor : MonoBehaviour
         if (!_isOneWay) return;
 
         float side = Vector3.Dot(_player.position - transform.position, _exitDirection.normalized);
-        if (side > _lockDistance) _isLocked = true;
-        else if (side < 0f) _isLocked = false;
+        if (side > _lockDistance)
+        {
+            _isLocked = true;
+        }
+        else if (side < 0f)
+        {
+            _isLocked = false;
+        }
     }
 }

@@ -129,7 +129,10 @@ public class BuildLogScreen : MonoBehaviour
     private void PushDoneLine(string line)
     {
         _doneLines.Add(line);
-        if (_doneLines.Count > _visibleLines - 1) _doneLines.RemoveAt(0);
+        if (_doneLines.Count > _visibleLines - 1)
+        {
+            _doneLines.RemoveAt(0);
+        }
     }
 
     // 다음 줄은 원본 코드, 가끔 같은 들여쓰기로 이상한 주석이 끼어듦

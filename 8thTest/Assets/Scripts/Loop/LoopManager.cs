@@ -27,13 +27,6 @@ public class LoopManager : MonoBehaviour
     private const string AddedColor = "#5FD07A";
     private const string HotfixColor = "#FFA94D";
 
-    // override 종류 번호 (AddRandomOverride의 순서와 같음)
-    private const int RedLightKind = 0;
-    private const int BlueLightKind = 1;
-    private const int NoColleagueKind = 2;
-    private const int NoPlantsKind = 3;
-    private const int BookcaseKind = 4;
-
     // QA 수칙 
     private static readonly string[] RuleLines =
     {
@@ -218,6 +211,10 @@ public class LoopManager : MonoBehaviour
     private Vector3 _cabinetDrawerPosition;
     private string _whiteboardLine;
 
+    // 06:00 이후에는 동료들이 먼저 내려간 뒤에만 엘리베이터를 쓸 수 있음 (퇴근 연출과 문이 겹치지 않게)
+    // 밤에는 엘리베이터가 잠겨 있음 (롤백은 이제 내려가는 계단이 맡음, 엘리베이터는 퇴근 전용)
+    public bool CanUseElevator => _isCleared && _ending.CanLeave;
+
     private void Start()
     {
         CacheOriginals();
@@ -229,10 +226,6 @@ public class LoopManager : MonoBehaviour
         _tablet.SetRules(rules.ToString());
     }
 
-    // 06:00 이후에는 동료들이 먼저 내려간 뒤에만 엘리베이터를 쓸 수 있음 (퇴근 연출과 문이 겹치지 않게)
-    // 밤에는 엘리베이터가 잠겨 있음 (롤백은 이제 내려가는 계단이 맡음, 엘리베이터는 퇴근 전용)
-    public bool CanUseElevator => _isCleared && _ending.CanLeave;
-
     private void Update() => UpdateMonitorWake();
 
     // 트리거 통과 처리 (통로 진입, 앞으로, 뒤로)
@@ -241,11 +234,22 @@ public class LoopManager : MonoBehaviour
         // 06:00 이후에는 엘리베이터(퇴근)만 받음, 동료들이 먼저 내려간 뒤에만 탈 수 있음
         if (_isCleared)
         {
-            if (type == LoopTriggerType.Back && _ending.CanLeave) ReturnToNight();
+            if (type == LoopTriggerType.Back && _ending.CanLeave)
+            {
+                ReturnToNight();
+            }
 
             // 계단으로 가도 갇히지 않게 이동만 시킴 (판정 없음)
-            if (type == LoopTriggerType.Forward) player.Teleport(_forwardTeleportOffset);
-            if (type == LoopTriggerType.Rollback) player.Teleport(_rollbackTeleportOffset);
+            if (type == LoopTriggerType.Forward)
+            {
+                player.Teleport(_forwardTeleportOffset);
+            }
+
+            if (type == LoopTriggerType.Rollback)
+            {
+                player.Teleport(_rollbackTeleportOffset);
+            }
+
             return;
         }
 
@@ -265,7 +269,11 @@ public class LoopManager : MonoBehaviour
                 break;
             case LoopTriggerType.Rollback:
                 // 판정 대기 중일 때만 판정하고, 이동은 항상 함 (계단 끝 가짜 문 앞에 갇히지 않게)
-                if (_isArmed) Judge(false);
+                if (_isArmed)
+                {
+                    Judge(false);
+                }
+
                 player.Teleport(_rollbackTeleportOffset);
                 break;
         }
@@ -296,7 +304,11 @@ public class LoopManager : MonoBehaviour
         if (_isArmed) return;
 
         _isArmed = true;
-        if (_colleague.gameObject.activeSelf) _colleague.BeginWalk(player.transform);
+        if (_colleague.gameObject.activeSelf)
+        {
+            _colleague.BeginWalk(player.transform);
+        }
+
         ScheduleHotfix();
     }
 
@@ -305,57 +317,76 @@ public class LoopManager : MonoBehaviour
     {
         if (_currentBuild.IsOriginal || _count < _hotfixStartHour || Random.value >= _hotfixChance) return;
 
-        _hotfixRoutine = StartCoroutine(DeployHotfixLater());
+        _hotfixRoutine = StartCoroutine(DeployHotfixLaterRoutine());
     }
 
-    private IEnumerator DeployHotfixLater()
+    private IEnumerator DeployHotfixLaterRoutine()
     {
         yield return new WaitForSeconds(Random.Range(_hotfixDelay.x, _hotfixDelay.y));
         _hotfixRoutine = null;
-        if (_isArmed) DeployHotfix();
+        if (_isArmed)
+        {
+            DeployHotfix();
+        }
     }
 
     private void CancelHotfix()
     {
-        if (_hotfixRoutine != null) StopCoroutine(_hotfixRoutine);
+        if (_hotfixRoutine != null)
+        {
+            StopCoroutine(_hotfixRoutine);
+        }
+
         _hotfixRoutine = null;
     }
 
     // 사무실은 그대로 두고 코드만 바꿈 → 플레이어가 바뀐 코드로 다시 판단해야 함
     private void DeployHotfix()
     {
-        var candidates = new List<(HotfixKind Kind, int Target)>();
+        var candidates = new List<(HotfixKind Kind, OverrideKind Target)>();
         OfficeBuild build = _currentBuild;
 
         // 책장 문이 열린 버그를 코드에 반영해 정상으로 만듦
-        if (build.Anomaly == AnomalyType.CabinetDoorOpen) candidates.Add((HotfixKind.Legitimize, BookcaseKind));
+        if (build.Anomaly == AnomalyType.CabinetDoorOpen)
+        {
+            candidates.Add((HotfixKind.Legitimize, OverrideKind.Bookcase));
+        }
 
         // 조명 명세 불일치는 Blue 줄이 있어야 성립하므로 조명은 건드리지 않음
         if (build.Anomaly != AnomalyType.LightMismatch)
         {
             if (build.LightOverride == LightOverride.None)
             {
-                candidates.Add((HotfixKind.AddLine, RedLightKind));
-                candidates.Add((HotfixKind.AddLine, BlueLightKind));
+                candidates.Add((HotfixKind.AddLine, OverrideKind.RedLight));
+                candidates.Add((HotfixKind.AddLine, OverrideKind.BlueLight));
             }
             else
             {
-                candidates.Add((HotfixKind.RemoveLine, build.LightOverride == LightOverride.Red ? RedLightKind : BlueLightKind));
+                candidates.Add((HotfixKind.RemoveLine, build.LightOverride == LightOverride.Red ? OverrideKind.RedLight : OverrideKind.BlueLight));
             }
         }
 
-        candidates.Add((build.HasNoColleague ? HotfixKind.RemoveLine : HotfixKind.AddLine, NoColleagueKind));
-        candidates.Add((build.HasNoPlants ? HotfixKind.RemoveLine : HotfixKind.AddLine, NoPlantsKind));
-        if (build.IsCabinetOpen) candidates.Add((HotfixKind.RemoveLine, BookcaseKind));
-        else if (build.Anomaly != AnomalyType.CabinetDoorOpen) candidates.Add((HotfixKind.AddLine, BookcaseKind));
+        candidates.Add((build.HasNoColleague ? HotfixKind.RemoveLine : HotfixKind.AddLine, OverrideKind.NoColleague));
+        candidates.Add((build.HasNoPlants ? HotfixKind.RemoveLine : HotfixKind.AddLine, OverrideKind.NoPlants));
+        if (build.IsCabinetOpen)
+        {
+            candidates.Add((HotfixKind.RemoveLine, OverrideKind.Bookcase));
+        }
+        else if (build.Anomaly != AnomalyType.CabinetDoorOpen)
+        {
+            candidates.Add((HotfixKind.AddLine, OverrideKind.Bookcase));
+        }
 
-        (HotfixKind kind, int target) = candidates[Random.Range(0, candidates.Count)];
+        (HotfixKind kind, OverrideKind target) = candidates[Random.Range(0, candidates.Count)];
         _currentBuild.Hotfix = kind;
         _currentBuild.HotfixTarget = target;
 
         // 절반쯤은 사무실도 눈앞에서 같이 바뀜 (코드와 같아져 정상), 나머지는 코드만 바뀜 (버그)
         _currentBuild.IsHotfixApplied = kind != HotfixKind.Legitimize && Random.value < _hotfixApplyChance;
-        if (_currentBuild.IsHotfixApplied) ApplyHotfixToOffice(kind, target);
+        if (_currentBuild.IsHotfixApplied)
+        {
+            ApplyHotfixToOffice(kind, target);
+        }
 
         UpdateTexts();
         _qaLog.AddLine(Colorize($"[{FormatTime(_count)}] Office_{GetBuildNumber():00}  긴급 핫픽스 배포", HotfixColor));
@@ -363,21 +394,21 @@ public class LoopManager : MonoBehaviour
     }
 
     // 핫픽스 내용을 사무실에 바로 반영 (조명 색, 동료, 화분, 책장)
-    private void ApplyHotfixToOffice(HotfixKind kind, int target)
+    private void ApplyHotfixToOffice(HotfixKind kind, OverrideKind target)
     {
         bool isAdded = kind == HotfixKind.AddLine;
         switch (target)
         {
-            case RedLightKind:
-            case BlueLightKind:
+            case OverrideKind.RedLight:
+            case OverrideKind.BlueLight:
                 OfficeBuild lightBuild = _currentBuild;
-                lightBuild.LightOverride = !isAdded ? LightOverride.None : target == RedLightKind ? LightOverride.Red : LightOverride.Blue;
+                lightBuild.LightOverride = !isAdded ? LightOverride.None : target == OverrideKind.RedLight ? LightOverride.Red : LightOverride.Blue;
                 ApplyLightColor(lightBuild);
                 break;
-            case NoColleagueKind:
+            case OverrideKind.NoColleague:
                 _colleague.gameObject.SetActive(!isAdded);
                 break;
-            case NoPlantsKind:
+            case OverrideKind.NoPlants:
                 foreach (GameObject plant in _plants)
                 {
                     plant.SetActive(!isAdded);
@@ -385,8 +416,15 @@ public class LoopManager : MonoBehaviour
 
                 break;
             default:
-                if (isAdded) OpenCabinetDoor();
-                else CloseCabinetDoor();
+                if (isAdded)
+                {
+                    OpenCabinetDoor();
+                }
+                else
+                {
+                    CloseCabinetDoor();
+                }
+
                 break;
         }
     }
@@ -415,7 +453,11 @@ public class LoopManager : MonoBehaviour
         // 원본 확인 구간은 판정 없이 검수 시작
         if (_currentBuild.IsOriginal)
         {
-            if (isForward) _qaLog.AddLine(Colorize($"[{FormatTime(0)}] 검수 시작", WaitingColor));
+            if (isForward)
+            {
+                _qaLog.AddLine(Colorize($"[{FormatTime(0)}] 검수 시작", WaitingColor));
+            }
+
             ApplyBuild(isForward ? CreateJudgedBuild() : CreateOriginalBuild());
             return;
         }
@@ -495,34 +537,34 @@ public class LoopManager : MonoBehaviour
         return "정상 빌드였음";
     }
 
-    private static string GetOverrideLabel(int kind)
+    private static string GetOverrideLabel(OverrideKind kind)
     {
         switch (kind)
         {
-            case RedLightKind:
+            case OverrideKind.RedLight:
                 return "조명 Red";
-            case BlueLightKind:
+            case OverrideKind.BlueLight:
                 return "조명 Blue";
-            case NoColleagueKind:
+            case OverrideKind.NoColleague:
                 return "동료 없음";
-            case NoPlantsKind:
+            case OverrideKind.NoPlants:
                 return "화분 없음";
             default:
                 return "책장 열림";
         }
     }
 
-    private static string GetOverrideCode(int kind)
+    private static string GetOverrideCode(OverrideKind kind)
     {
         switch (kind)
         {
-            case RedLightKind:
+            case OverrideKind.RedLight:
                 return "override LightColor => Red;";
-            case BlueLightKind:
+            case OverrideKind.BlueLight:
                 return "override LightColor => Blue;";
-            case NoColleagueKind:
+            case OverrideKind.NoColleague:
                 return "override NpcCount => 0;";
-            case NoPlantsKind:
+            case OverrideKind.NoPlants:
                 return "override PlantCount => 0;";
             default:
                 return "override BookcaseOpen => true;";
@@ -567,7 +609,11 @@ public class LoopManager : MonoBehaviour
         {
             _normalStreak++;
             _bugStreak = 0;
-            if (Random.value < OverrideChance) AddRandomOverride(ref build);
+            if (Random.value < OverrideChance)
+            {
+                AddRandomOverride(ref build);
+            }
+
             return build;
         }
 
@@ -617,19 +663,19 @@ public class LoopManager : MonoBehaviour
         // 이번 이상현상과 겹치는 종류가 뽑히면 다시 뽑음
         while (true)
         {
-            switch (Random.Range(0, OverrideKindCount))
+            switch ((OverrideKind)Random.Range(0, OverrideKindCount))
             {
-                case 0:
+                case OverrideKind.RedLight:
                     build.LightOverride = LightOverride.Red;
                     return;
-                case 1:
+                case OverrideKind.BlueLight:
                     build.LightOverride = LightOverride.Blue;
                     return;
-                case 2:
+                case OverrideKind.NoColleague:
                     if (build.Anomaly == AnomalyType.ColleagueStare) continue;
                     build.HasNoColleague = true;
                     return;
-                case 3:
+                case OverrideKind.NoPlants:
                     if (build.Anomaly == AnomalyType.WiltedPlant) continue;
                     build.HasNoPlants = true;
                     return;
@@ -694,7 +740,10 @@ public class LoopManager : MonoBehaviour
             }
         }
 
-        if (build.IsCabinetOpen) OpenCabinetDoor();
+        if (build.IsCabinetOpen)
+        {
+            OpenCabinetDoor();
+        }
     }
 
     // 책장 문짝을 양쪽으로 활짝 열고 서랍을 앞으로 빼냄
@@ -808,8 +857,15 @@ public class LoopManager : MonoBehaviour
                 break;
             case AnomalyType.WhiteboardMessage:
                 // 01:00 전에는 메모 한 줄만 슬쩍 바뀌고, 01:00부터는 피로 쓴 글
-                if (_count < _bloodWritingStartHour) _whiteboardLastLine.text = _whiteboardChangedLine;
-                else ShowBloodWriting();
+                if (_count < _bloodWritingStartHour)
+                {
+                    _whiteboardLastLine.text = _whiteboardChangedLine;
+                }
+                else
+                {
+                    ShowBloodWriting();
+                }
+
                 break;
         }
     }
@@ -862,7 +918,11 @@ public class LoopManager : MonoBehaviour
         }
 
         builder.AppendLine(Colorize($"● 리뷰 대기   Office_{GetBuildNumber():00}   {FormatTime(_count)}", WaitingColor));
-        if (_currentBuild.Hotfix != HotfixKind.None) builder.AppendLine(Colorize("● 긴급 핫픽스 적용됨 — 다시 확인하세요", HotfixColor));
+        if (_currentBuild.Hotfix != HotfixKind.None)
+        {
+            builder.AppendLine(Colorize("● 긴급 핫픽스 적용됨 — 다시 확인하세요", HotfixColor));
+        }
+
         builder.AppendLine();
 
         // 바뀐 값이 없으면 원본과 같은 한 줄로 표시
@@ -884,18 +944,36 @@ public class LoopManager : MonoBehaviour
     private void AppendOverrides(StringBuilder builder)
     {
         // 바뀐 줄은 + 표시와 초록색으로 한눈에 보이게
-        if (_currentBuild.LightOverride != LightOverride.None) AppendOverrideLine(builder, _currentBuild.LightOverride == LightOverride.Red ? RedLightKind : BlueLightKind);
-        if (_currentBuild.HasNoColleague) AppendOverrideLine(builder, NoColleagueKind);
-        if (_currentBuild.HasNoPlants) AppendOverrideLine(builder, NoPlantsKind);
-        if (_currentBuild.IsCabinetOpen) AppendOverrideLine(builder, BookcaseKind);
+        if (_currentBuild.LightOverride != LightOverride.None)
+        {
+            AppendOverrideLine(builder, _currentBuild.LightOverride == LightOverride.Red ? OverrideKind.RedLight : OverrideKind.BlueLight);
+        }
+
+        if (_currentBuild.HasNoColleague)
+        {
+            AppendOverrideLine(builder, OverrideKind.NoColleague);
+        }
+
+        if (_currentBuild.HasNoPlants)
+        {
+            AppendOverrideLine(builder, OverrideKind.NoPlants);
+        }
+
+        if (_currentBuild.IsCabinetOpen)
+        {
+            AppendOverrideLine(builder, OverrideKind.Bookcase);
+        }
 
         // 핫픽스로 새로 들어온 줄은 주황색
         bool isHotfixAdded = _currentBuild.Hotfix is HotfixKind.AddLine or HotfixKind.Legitimize;
-        if (isHotfixAdded) builder.AppendLine(Colorize($"<b>+   {GetOverrideCode(_currentBuild.HotfixTarget)}</b>   // hotfix", HotfixColor));
+        if (isHotfixAdded)
+        {
+            builder.AppendLine(Colorize($"<b>+   {GetOverrideCode(_currentBuild.HotfixTarget)}</b>   // hotfix", HotfixColor));
+        }
     }
 
     // 원래 있던 override 한 줄 (핫픽스로 지워졌으면 - 표시와 빨간색)
-    private void AppendOverrideLine(StringBuilder builder, int kind)
+    private void AppendOverrideLine(StringBuilder builder, OverrideKind kind)
     {
         bool isRemoved = _currentBuild.Hotfix == HotfixKind.RemoveLine && _currentBuild.HotfixTarget == kind;
         // 방송 화면에서도 잘 보이게 바뀐 줄은 굵게
@@ -931,7 +1009,7 @@ public class LoopManager : MonoBehaviour
 
         // 근무 중 배포된 긴급 핫픽스 (사무실은 그대로, 코드만 바뀜)
         public HotfixKind Hotfix;
-        public int HotfixTarget;
+        public OverrideKind HotfixTarget;
         public bool IsHotfixApplied;
     }
 }

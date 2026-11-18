@@ -54,7 +54,26 @@ public class Elevator : MonoBehaviour
         UpdateDoor();
 
         // 타는 중이 아니면 퇴근 가능 여부에 맞춰 표시를 바꿈
-        if (!_isRiding) SetDisplay(_loopManager.CanUseElevator ? IdleText : LockedText);
+        if (!_isRiding)
+        {
+            SetDisplay(_loopManager.CanUseElevator ? IdleText : LockedText);
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.TryGetComponent(out FirstPersonController player))
+        {
+            _rider = player;
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.TryGetComponent(out FirstPersonController _))
+        {
+            _rider = null;
+        }
     }
 
     // 퇴근 연출에서 동료들이 타는 동안 문을 열어 둠
@@ -63,26 +82,16 @@ public class Elevator : MonoBehaviour
     // 퇴근 연출에서 동료들을 태우고 문을 닫아 둠
     public void HoldClosed(bool isHeld) => _isHeldClosed = isHeld;
 
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.TryGetComponent(out FirstPersonController player)) _rider = player;
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.TryGetComponent(out FirstPersonController _)) _rider = null;
-    }
-
     private void TryRide()
     {
         if (_rider == null || _isRiding) return;
         if (!_loopManager.CanUseElevator) return;
         if (!_interactAction.WasPressedThisFrame()) return;
 
-        StartCoroutine(Ride());
+        StartCoroutine(RideRoutine());
     }
 
-    private IEnumerator Ride()
+    private IEnumerator RideRoutine()
     {
         _isRiding = true;
         _door.Close();
@@ -117,12 +126,21 @@ public class Elevator : MonoBehaviour
 
         bool isNear = Vector3.Distance(_player.position, _doorPanel.transform.position) <= _callDistance;
         bool shouldOpen = !_isHeldClosed && (_isHeldOpen || _rider != null || (isNear && _loopManager.CanUseElevator));
-        if (shouldOpen) _door.Open();
-        else _door.Close();
+        if (shouldOpen)
+        {
+            _door.Open();
+        }
+        else
+        {
+            _door.Close();
+        }
     }
 
     private void SetDisplay(string text)
     {
-        if (_display != null) _display.text = text;
+        if (_display != null)
+        {
+            _display.text = text;
+        }
     }
 }

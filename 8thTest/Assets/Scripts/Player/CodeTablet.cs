@@ -16,6 +16,15 @@ public class CodeTablet : MonoBehaviour
     private const float NoticePulseSpeed = 5f;
     private const float GlitchInterval = 0.12f;
     private const string GlitchChars = "█▓▒░#@%&?!/\\|<>";
+    // 알림 전구가 가장 어두울 때의 투명도
+    private const float NoticeMinAlpha = 0.55f;
+
+    // 먹통 화면의 깨진 글자 (줄 수, 줄 길이 범위, 글자가 깨질 확률)
+    private const int OfflineLineCount = 6;
+    private const int OfflineLineMin = 6;
+    private const int OfflineLineMax = 30;
+    private const float OfflineGlitchChance = 0.6f;
+
     private const string NoReportText = "<color=#6A9955>// 수신된 리포트 없음\n// QA 어시스턴트 단말에서 [E]로 받기</color>";
 
     // 페이지 번호 (코드 → 리포트 → 수칙 순서)
@@ -97,7 +106,11 @@ public class CodeTablet : MonoBehaviour
     private void Update()
     {
         // 누르고 있는 동안이 아니라, 누를 때마다 들고 내림
-        if (_viewAction.WasPressedThisFrame()) _isOpen = !_isOpen;
+        if (_viewAction.WasPressedThisFrame())
+        {
+            _isOpen = !_isOpen;
+        }
+
         float target = _isOpen ? 1f : 0f;
         _progress = Mathf.MoveTowards(_progress, target, _raiseSpeed * Time.deltaTime);
         ApplyPose();
@@ -147,7 +160,11 @@ public class CodeTablet : MonoBehaviour
         // 내려놓았다가 다시 들면 항상 코드 페이지부터
         if (!IsRaised)
         {
-            if (_page != CodePage) ShowPage(CodePage);
+            if (_page != CodePage)
+            {
+                ShowPage(CodePage);
+            }
+
             _wasRaised = false;
             UpdateNotice();
             return;
@@ -156,7 +173,11 @@ public class CodeTablet : MonoBehaviour
         // 새 리포트가 와 있으면 드는 순간 리포트 페이지부터 (알림을 보고 Tab을 눌렀을 때)
         // 리포트가 없으면 코드 페이지를 보여 주며 코드 변경 알림을 끔
         // 아직 안 본 수칙이 있으면 수칙이 가장 먼저
-        if (!_wasRaised) ShowPage(_hasNewRules ? RulesPage : _hasUnread ? ReportPage : CodePage);
+        if (!_wasRaised)
+        {
+            ShowPage(_hasNewRules ? RulesPage : _hasUnread ? ReportPage : CodePage);
+        }
+
         _wasRaised = true;
         UpdateNotice();
 
@@ -169,9 +190,18 @@ public class CodeTablet : MonoBehaviour
         Keyboard keyboard = Keyboard.current;
         if (keyboard != null)
         {
-            if (keyboard.digit1Key.wasPressedThisFrame) ShowPage(CodePage);
-            else if (keyboard.digit2Key.wasPressedThisFrame) ShowPage(ReportPage);
-            else if (keyboard.digit3Key.wasPressedThisFrame) ShowPage(RulesPage);
+            if (keyboard.digit1Key.wasPressedThisFrame)
+            {
+                ShowPage(CodePage);
+            }
+            else if (keyboard.digit2Key.wasPressedThisFrame)
+            {
+                ShowPage(ReportPage);
+            }
+            else if (keyboard.digit3Key.wasPressedThisFrame)
+            {
+                ShowPage(RulesPage);
+            }
         }
 
         // 휠은 한 칸씩만 (터치패드처럼 값이 연달아 들어와도 휙휙 넘어가지 않게), 끝에서 멈춤
@@ -180,7 +210,11 @@ public class CodeTablet : MonoBehaviour
         if (scroll == 0f || _scrollTimer > 0f) return;
 
         int next = Mathf.Clamp(_page + (scroll < 0f ? 1 : -1), 0, PageCount - 1);
-        if (next != _page) ShowPage(next);
+        if (next != _page)
+        {
+            ShowPage(next);
+        }
+
         _scrollTimer = ScrollCooldown;
     }
 
@@ -192,16 +226,28 @@ public class CodeTablet : MonoBehaviour
         if (!isVisible) return;
 
         _noticeTitle.text = GetNoticeTitle();
-        _notice.alpha = Mathf.Lerp(0.55f, 1f, (Mathf.Sin(Time.time * NoticePulseSpeed) + 1f) * 0.5f);
+        _notice.alpha = Mathf.Lerp(NoticeMinAlpha, 1f, (Mathf.Sin(Time.time * NoticePulseSpeed) + 1f) * 0.5f);
     }
 
     // 한 가지면 그 알림 문구, 여러 가지면 이어서 표시
     private string GetNoticeTitle()
     {
         var items = new List<string>();
-        if (_hasNewRules) items.Add("QA 수칙");
-        if (_hasNewCode) items.Add("긴급 핫픽스");
-        if (_hasUnread) items.Add("새 리포트");
+        if (_hasNewRules)
+        {
+            items.Add("QA 수칙");
+        }
+
+        if (_hasNewCode)
+        {
+            items.Add("긴급 핫픽스");
+        }
+
+        if (_hasUnread)
+        {
+            items.Add("새 리포트");
+        }
+
         if (items.Count > 1) return string.Join(" · ", items);
 
         if (_hasNewRules) return "QA 수칙 확인";
@@ -213,9 +259,20 @@ public class CodeTablet : MonoBehaviour
         _page = page;
 
         // 들고 있는 상태에서 실제로 본 페이지의 알림만 꺼짐
-        if (IsRaised && page == ReportPage) _hasUnread = false;
-        if (IsRaised && page == CodePage) _hasNewCode = false;
-        if (IsRaised && page == RulesPage) _hasNewRules = false;
+        if (IsRaised && page == ReportPage)
+        {
+            _hasUnread = false;
+        }
+
+        if (IsRaised && page == CodePage)
+        {
+            _hasNewCode = false;
+        }
+
+        if (IsRaised && page == RulesPage)
+        {
+            _hasNewRules = false;
+        }
 
         _codePage.SetActive(page == CodePage);
         _reportPage.SetActive(page == ReportPage);
@@ -231,7 +288,10 @@ public class CodeTablet : MonoBehaviour
         for (int i = 0; i < PageCount; i++)
         {
             dots.Append(i == page ? $"<color={ActiveTabColor}>●</color>" : $"<color={InactiveTabColor}>○</color>");
-            if (i < PageCount - 1) dots.Append("  ");
+            if (i < PageCount - 1)
+            {
+                dots.Append("  ");
+            }
         }
 
         _pageDots.text = dots.ToString();
@@ -264,12 +324,12 @@ public class CodeTablet : MonoBehaviour
         builder.AppendLine($"<color={OfflineColor}>QA 어시스턴트 응답 없음</color>");
         builder.AppendLine($"<color={OfflineColor}>연결 끊김 — 리포트를 불러올 수 없음</color>");
         builder.AppendLine();
-        for (int line = 0; line < 6; line++)
+        for (int line = 0; line < OfflineLineCount; line++)
         {
-            int length = Random.Range(6, 30);
+            int length = Random.Range(OfflineLineMin, OfflineLineMax);
             for (int i = 0; i < length; i++)
             {
-                builder.Append(Random.value < 0.6f ? GlitchChars[Random.Range(0, GlitchChars.Length)] : ' ');
+                builder.Append(Random.value < OfflineGlitchChance ? GlitchChars[Random.Range(0, GlitchChars.Length)] : ' ');
             }
 
             builder.AppendLine();
