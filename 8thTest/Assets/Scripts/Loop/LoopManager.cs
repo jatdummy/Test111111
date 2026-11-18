@@ -888,8 +888,10 @@ public class LoopManager : MonoBehaviour
     {
         foreach (TextMesh monitorText in _monitorTexts)
         {
-            float distance = Vector3.Distance(_player.position, monitorText.transform.position);
-            monitorText.gameObject.SetActive(distance <= _monitorWakeDistance);
+            // 높이는 빼고 바닥 위 거리만 잼 (벽 위쪽 모니터와 발 위치의 높이 차 때문에 바로 밑에서도 꺼지지 않게)
+            Vector3 offset = monitorText.transform.position - _player.position;
+            offset.y = 0f;
+            monitorText.gameObject.SetActive(offset.magnitude <= _monitorWakeDistance);
         }
     }
 
