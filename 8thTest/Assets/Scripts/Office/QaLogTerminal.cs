@@ -19,12 +19,18 @@ public class QaLogTerminal : MonoBehaviour
     private const string IdleColor = "7D848E";
     private const string ReadyColor = "F2C14E";
     private const float ReadyBlinkSpeed = 3f;
+
+    // 리포트 준비됨 글자가 가장 어두울 때의 투명도
+    private const float ReadyMinAlpha = 0.35f;
     private const float CursorBlinkSeconds = 0.5f;
     private const string ReportHeader = "<color=#5FD07A>QA 어시스턴트 리포트</color>";
     private const int MaxStoredLines = 60;
     private const string GlitchChars = "█▓▒░#@%&?!/\\|<>";
     private const float GlitchInterval = 0.06f;
     private const int DotCount = 3;
+
+    // 전송 중 글자 (점 1~3개, 미리 만들어 두고 돌려 씀)
+    private static readonly string[] SendingTexts = { SendingTitle + ".", SendingTitle + "..", SendingTitle + "..." };
 
     // 고장 직전 깜빡임 (글자가 꺼질 확률, 화면이 꺼질 확률, 불꽃 확률과 개수, 모니터 떨림 각도)
     private const float GlitchTextHideChance = 0.25f;
@@ -73,7 +79,7 @@ public class QaLogTerminal : MonoBehaviour
     [SerializeField] private TextMesh _cursorText;
 
     // 고장 날 때 깨진 글자를 보여 줄 크기 배율 (큰 상태 글씨에 비해 작게)
-    [SerializeField] private float _glitchTextScale = 0.5f;
+    [SerializeField, Range(0f, 1f)] private float _glitchTextScale = 0.5f;
 
     // 플레이어 (가까이 왔는지 확인용)
     [SerializeField] private Transform _player;
@@ -88,29 +94,29 @@ public class QaLogTerminal : MonoBehaviour
     [SerializeField] private UnityEngine.UI.Text _promptText;
 
     // 이 거리 안에 들어오면 화면이 켜지고 전송할 수 있음
-    [SerializeField] private float _useDistance = 1.8f;
+    [SerializeField, Min(0f)] private float _useDistance = 1.8f;
 
     // 화면 정면에서 이 각도 안에 서 있어야 사용할 수 있음 (옆이나 뒤에서는 안 됨)
-    [SerializeField] private float _frontAngle = 40f;
+    [SerializeField, Range(0f, 180f)] private float _frontAngle = 40f;
 
     // 카메라가 화면을 이 각도 안으로 바라보고 있어야 사용할 수 있음
-    [SerializeField] private float _lookAngle = 25f;
+    [SerializeField, Range(0f, 180f)] private float _lookAngle = 25f;
 
     // 리포트에 담는 최근 기록 줄 수
-    [SerializeField] private int _reportLines = 9;
+    [SerializeField, Min(1)] private int _reportLines = 9;
 
     // 전송 중 문구를 보여 주는 시간(초)
-    [SerializeField] private float _sendSeconds = 1.2f;
+    [SerializeField, Min(0.01f)] private float _sendSeconds = 1.2f;
 
     // 전송 완료 문구를 보여 주는 시간(초)
-    [SerializeField] private float _sentSeconds = 1.5f;
+    [SerializeField, Min(0f)] private float _sentSeconds = 1.5f;
 
     [Header("고장")]
     // 한 판(22:00 → 06:00)에 태블릿으로 보낼 수 있는 횟수 (다 쓰고 한 번 더 누르면 고장)
-    [SerializeField] private int _maxSends = 3;
+    [SerializeField, Min(1)] private int _maxSends = 3;
 
     // 고장 날 때 글자가 깨지며 깜빡이는 시간(초)
-    [SerializeField] private float _breakSeconds = 1.4f;
+    [SerializeField, Min(0.01f)] private float _breakSeconds = 1.4f;
 
     // 모니터 화면 판 (고장 나면 꺼진 재질로 바뀜)
     [SerializeField] private Renderer _screen;
@@ -128,7 +134,7 @@ public class QaLogTerminal : MonoBehaviour
     [SerializeField] private Vector3 _brokenTilt = new(-16f, 11f, -7f);
 
     // 꺾일 때 튕기는 시간(초)
-    [SerializeField] private float _kickSeconds = 0.5f;
+    [SerializeField, Min(0.01f)] private float _kickSeconds = 0.5f;
 
     // 화면에서 튀는 불꽃
     [SerializeField] private ParticleSystem _sparks;
@@ -140,20 +146,20 @@ public class QaLogTerminal : MonoBehaviour
     [SerializeField] private Light _flash;
 
     // 터질 때 번쩍이는 세기
-    [SerializeField] private float _flashIntensity = 8f;
+    [SerializeField, Min(0f)] private float _flashIntensity = 8f;
 
     // 화면에서 떨어져 나가는 유리 조각들 (평소엔 꺼져 있음)
     [SerializeField] private Rigidbody[] _shards;
 
     // 유리 조각이 튀어 나가는 세기
-    [SerializeField] private float _shardForce = 2.5f;
+    [SerializeField, Min(0f)] private float _shardForce = 2.5f;
 
     // 터질 때 흔들 플레이어 카메라
     [SerializeField] private Transform _cameraPivot;
 
     // 카메라 흔들림 세기와 시간(초)
-    [SerializeField] private float _shakeAmount = 0.07f;
-    [SerializeField] private float _shakeSeconds = 0.5f;
+    [SerializeField, Min(0f)] private float _shakeAmount = 0.07f;
+    [SerializeField, Min(0.01f)] private float _shakeSeconds = 0.5f;
 
     // 부서진 뒤 이따금 불꽃이 튀는 간격(초, 최소 ~ 최대)
     [SerializeField] private Vector2 _sparkInterval = new(1.2f, 3.5f);
@@ -169,11 +175,20 @@ public class QaLogTerminal : MonoBehaviour
     private Material _liveScreenMaterial;
     private Quaternion _monitorRotation;
 
+    // 대기 / 준비 글자 색 (깜빡임은 글자 색 알파로)
+    private Color _idleColor;
+    private Color _readyColor;
+
+    // 지금 화면에 넣어 둔 대기 / 준비 글자 (같으면 다시 넣지 않음)
+    private string _shownTitle;
+
     // 씬이 새로 열릴 때마다(새 판, 엔딩 뒤 다시 시작) 멀쩡한 단말에 횟수도 처음부터
     private void Start()
     {
         _liveScreenMaterial = _screen.sharedMaterial;
         _monitorRotation = _monitor.localRotation;
+        ColorUtility.TryParseHtmlString("#" + IdleColor, out _idleColor);
+        ColorUtility.TryParseHtmlString("#" + ReadyColor, out _readyColor);
         ShowIdle();
     }
 
@@ -262,20 +277,39 @@ public class QaLogTerminal : MonoBehaviour
     }
 
     // 리포트가 준비되면 상태 글씨가 천천히 깜빡이고, 구석 커서는 늘 깜빡임
+    // 글자는 상태가 바뀔 때만 넣고, 준비됨 깜빡임은 글자 색 알파만 바꿈 (매 프레임 문자열을 만들지 않게)
     private void UpdateScreenAnimation()
     {
         bool isCursorOn = Time.time % (CursorBlinkSeconds * 2f) < CursorBlinkSeconds;
         _cursorText.text = isCursorOn ? "<color=#5FD07A>_</color>" : string.Empty;
-        if (_isBusy) return;
-
-        if (!_hasNewFailure)
+        if (_isBusy)
         {
-            _screenText.text = $"<color=#{IdleColor}>{IdleTitle}</color>";
+            // 전송 · 고장 글자는 각자 색 태그를 씀, 끝나면 대기 / 준비 글자를 다시 넣게 비워 둠
+            _screenText.color = Color.white;
+            _shownTitle = null;
             return;
         }
 
-        float alpha = Mathf.Lerp(0.35f, 1f, (Mathf.Sin(Time.time * ReadyBlinkSpeed) + 1f) * 0.5f);
-        _screenText.text = $"<color=#{ReadyColor}{Mathf.RoundToInt(alpha * 255f):X2}>{ReadyTitle}</color>";
+        if (!_hasNewFailure)
+        {
+            ShowTitle(IdleTitle, _idleColor);
+            return;
+        }
+
+        Color color = _readyColor;
+        color.a = Mathf.Lerp(ReadyMinAlpha, 1f, (Mathf.Sin(Time.time * ReadyBlinkSpeed) + 1f) * 0.5f);
+        ShowTitle(ReadyTitle, color);
+    }
+
+    private void ShowTitle(string title, Color color)
+    {
+        if (_shownTitle != title)
+        {
+            _shownTitle = title;
+            _screenText.text = title;
+        }
+
+        _screenText.color = color;
     }
 
     private void SetScreenVisible(bool isVisible)
@@ -296,7 +330,7 @@ public class QaLogTerminal : MonoBehaviour
         while (elapsed < _sendSeconds)
         {
             int dots = 1 + (int)(elapsed / _sendSeconds * DotCount * 2) % DotCount;
-            _screenText.text = SendingTitle + new string('.', dots);
+            _screenText.text = SendingTexts[dots - 1];
             _subText.text = IdleSub;
             elapsed += Time.deltaTime;
             yield return null;

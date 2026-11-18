@@ -13,7 +13,7 @@ public class Elevator : MonoBehaviour
     private const string LockedText = "운행 중지";
 
     // 문이 닫혀 있는 시간(초)
-    [SerializeField] private float _closedSeconds = 1.5f;
+    [SerializeField, Min(0f)] private float _closedSeconds = 1.5f;
 
     // 닫혔을 때 보이는 문짝
     [SerializeField] private GameObject _doorPanel;
@@ -28,7 +28,7 @@ public class Elevator : MonoBehaviour
     [SerializeField] private Transform _player;
 
     // 문 앞에서 이 거리 안에 들어오면 문이 열림
-    [SerializeField] private float _callDistance = 2.2f;
+    [SerializeField, Min(0f)] private float _callDistance = 2.2f;
 
     // 타기 (Player/Interact)
     [SerializeField] private InputActionReference _interactAction;

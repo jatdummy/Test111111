@@ -4,10 +4,10 @@ using UnityEngine;
 public class GrowOnEnable : MonoBehaviour
 {
     // 처음 크기 배율
-    [SerializeField] private float _startScale = 0.15f;
+    [SerializeField, Min(0f)] private float _startScale = 0.15f;
 
     // 다 넓어지는 데 걸리는 시간(초)
-    [SerializeField] private float _growSeconds = 40f;
+    [SerializeField, Min(0.01f)] private float _growSeconds = 40f;
 
     private Vector3 _fullScale;
     private float _elapsed;

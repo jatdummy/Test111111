@@ -6,7 +6,7 @@ public class ColleagueWalker : MonoBehaviour
     private const float MinFaceDistance = 0.01f;
 
     // 걷기 속도(초당 거리)
-    [SerializeField] private float _walkSpeed = 1.1f;
+    [SerializeField, Min(0f)] private float _walkSpeed = 1.1f;
 
     // 걷기 시작 위치
     [SerializeField] private Vector3 _startPosition;
@@ -21,7 +21,7 @@ public class ColleagueWalker : MonoBehaviour
     [SerializeField] private Vector3 _endPosition;
 
     // 앉을 때 내려가는 높이
-    [SerializeField] private float _sitDrop = 0.35f;
+    [SerializeField, Min(0f)] private float _sitDrop = 0.35f;
 
     // 앉았을 때 바라보는 방향
     [SerializeField] private Vector3 _sitDirection = Vector3.back;

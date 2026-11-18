@@ -11,16 +11,16 @@ public class HeadBob : MonoBehaviour
     [SerializeField] private CharacterController _controller;
 
     // 걸을 때 위아래로 흔들리는 높이
-    [SerializeField] private float _verticalAmount = 0.015f;
+    [SerializeField, Min(0f)] private float _verticalAmount = 0.015f;
 
     // 걸을 때 좌우로 흔들리는 폭
-    [SerializeField] private float _horizontalAmount = 0.008f;
+    [SerializeField, Min(0f)] private float _horizontalAmount = 0.008f;
 
     // 이동 거리 1m당 흔들림 횟수 (걸음 박자)
-    [SerializeField] private float _stepsPerMeter = 0.42f;
+    [SerializeField, Min(0f)] private float _stepsPerMeter = 0.42f;
 
     // 멈추면 원래 높이로 돌아오는 빠르기
-    [SerializeField] private float _returnSpeed = 6f;
+    [SerializeField, Min(0f)] private float _returnSpeed = 6f;
 
     private Vector3 _appliedOffset;
     private float _phase;

@@ -32,7 +32,7 @@ public class EndingDirector : MonoBehaviour
     [SerializeField] private Light[] _ceilingLights;
 
     // 아침 천장 조명 밝기 배율 (햇빛이 잘 보이게)
-    [SerializeField] private float _morningCeilingScale = 0.45f;
+    [SerializeField, Range(0f, 1f)] private float _morningCeilingScale = 0.45f;
 
     [Header("퇴근")]
     // 플레이어 (사무실에 올라왔는지, 인사할 때 바라볼 대상)
@@ -42,10 +42,10 @@ public class EndingDirector : MonoBehaviour
     [SerializeField] private Leaver[] _leavers;
 
     // 걷기 속도(초당 거리)
-    [SerializeField] private float _walkSpeed = 1.3f;
+    [SerializeField, Min(0f)] private float _walkSpeed = 1.3f;
 
     // 인사하며 멈춰 있는 시간(초)
-    [SerializeField] private float _greetSeconds = 2.5f;
+    [SerializeField, Min(0f)] private float _greetSeconds = 2.5f;
 
     // 인사 말풍선 글자 (말하는 동료 머리 위로 옮겨 다님)
     [SerializeField] private TextMesh _speech;
@@ -57,17 +57,17 @@ public class EndingDirector : MonoBehaviour
     [SerializeField] private CodeTablet _tablet;
 
     // 동료들을 태우고 문이 닫혀 있는 시간(초)
-    [SerializeField] private float _doorClosedSeconds = 2f;
+    [SerializeField, Min(0f)] private float _doorClosedSeconds = 2f;
 
     [Header("마무리")]
     // 22:00 사무실을 보여 주는 시간(초)
-    [SerializeField] private float _nightHoldSeconds = 3.5f;
+    [SerializeField, Min(0f)] private float _nightHoldSeconds = 3.5f;
 
     // 화면을 덮는 검은 판
     [SerializeField] private Image _fade;
 
     // 검게 덮이는 시간(초)
-    [SerializeField] private float _fadeSeconds = 2f;
+    [SerializeField, Min(0.01f)] private float _fadeSeconds = 2f;
 
     private float[] _ceilingIntensities;
     private bool _isPlaying;

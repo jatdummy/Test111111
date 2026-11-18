@@ -49,7 +49,7 @@ public class LoopManager : MonoBehaviour
     [SerializeField] private Transform _player;
 
     // 모니터가 켜지는 거리 (멀리서는 코드가 바뀌는 순간이 보이지 않게)
-    [SerializeField] private float _monitorWakeDistance = 2.5f;
+    [SerializeField, Min(0f)] private float _monitorWakeDistance = 2.5f;
 
     [Header("화면")]
     // 코드를 보여 줄 모니터 글자 (시작 구역, 끝 구역)
@@ -69,7 +69,7 @@ public class LoopManager : MonoBehaviour
     [SerializeField] private Transform _extinguisher;
 
     // 소화기가 천장에 붙을 때의 높이
-    [SerializeField] private float _extinguisherCeilingHeight = 2.7f;
+    [SerializeField, Min(0f)] private float _extinguisherCeilingHeight = 2.7f;
 
     // 천장에 붙을 때 벽에서 떨어뜨리는 거리 (벽에 박히지 않고 천장 면에 보이게)
     [SerializeField] private Vector3 _extinguisherCeilingInset = new(0f, 0f, -0.3f);
@@ -87,7 +87,7 @@ public class LoopManager : MonoBehaviour
     [SerializeField] private Transform _eyeDoorHinge;
 
     // 눈 이상현상일 때 문이 안쪽으로 열리는 각도
-    [SerializeField] private float _eyeDoorOpenAngle = 20f;
+    [SerializeField, Range(0f, 90f)] private float _eyeDoorOpenAngle = 20f;
 
     // 문 틈 안쪽에서 보이는 눈
     [SerializeField] private GameObject _doorEyes;
@@ -108,7 +108,7 @@ public class LoopManager : MonoBehaviour
     [SerializeField] private Vector3 _wiltLeafScale = new(1.15f, 0.55f, 1.15f);
 
     // 시든 잎이 복도 쪽으로 기우는 각도
-    [SerializeField] private float _wiltLeafTilt = 18f;
+    [SerializeField, Range(0f, 90f)] private float _wiltLeafTilt = 18f;
 
     // 시든 화분 앞 바닥에 떨어진 마른 잎
     [SerializeField] private GameObject _fallenLeaves;
@@ -157,7 +157,7 @@ public class LoopManager : MonoBehaviour
     [SerializeField] private TextMesh _bloodSignature;
 
     // 피로 쓴 글이 나오기 시작하는 경과 시간 (22:00 기준, 3이면 01:00)
-    [SerializeField] private int _bloodWritingStartHour = 3;
+    [SerializeField, Range(0, ClearCount - 1)] private int _bloodWritingStartHour = 3;
 
     [Header("단말 · 태블릿")]
     // 판정 기록을 남길 검수 로그 단말 (코드판에는 결과를 띄우지 않음)
@@ -168,16 +168,16 @@ public class LoopManager : MonoBehaviour
 
     [Header("긴급 핫픽스")]
     // 판정 대기 중 긴급 핫픽스로 코드가 바뀔 확률 (원본 빌드 제외)
-    [SerializeField] private float _hotfixChance = 0.3f;
+    [SerializeField, Range(0f, 1f)] private float _hotfixChance = 0.3f;
 
     // 통로에 들어온 뒤 핫픽스가 배포되기까지 걸리는 시간(초, 최소 ~ 최대)
     [SerializeField] private Vector2 _hotfixDelay = new(6f, 14f);
 
     // 핫픽스가 나오기 시작하는 경과 시간 (22:00 기준, 1이면 23:00부터)
-    [SerializeField] private int _hotfixStartHour = 1;
+    [SerializeField, Range(0, ClearCount - 1)] private int _hotfixStartHour = 1;
 
     // 핫픽스가 사무실에도 바로 반영될 확률 (반영되면 정상, 코드만 바뀌면 버그)
-    [SerializeField] private float _hotfixApplyChance = 0.5f;
+    [SerializeField, Range(0f, 1f)] private float _hotfixApplyChance = 0.5f;
 
     // 06:00 퇴근 연출 (햇빛, 동료 퇴근, 엘리베이터 반전)
     [SerializeField] private EndingDirector _ending;

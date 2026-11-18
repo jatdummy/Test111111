@@ -16,7 +16,7 @@ public class StaringEyes : MonoBehaviour
     [SerializeField] private Vector2 _blinkInterval = new(2.5f, 6f);
 
     // 감고 있는 시간(초)
-    [SerializeField] private float _blinkSeconds = 0.12f;
+    [SerializeField, Min(0f)] private float _blinkSeconds = 0.12f;
 
     private Vector3[] _openScales;
     private float _nextBlinkTime;

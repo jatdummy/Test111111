@@ -33,7 +33,7 @@ public class CodeTablet : MonoBehaviour
     private const int PageCount = 3;
 
     // 들어 올리고 내리는 속도 (초당 진행도, 1이면 1초)
-    [SerializeField] private float _raiseSpeed = 6f;
+    [SerializeField, Min(0f)] private float _raiseSpeed = 6f;
 
     // 태블릿 본체 (카메라 자식)
     [SerializeField] private Transform _tablet;
@@ -93,6 +93,9 @@ public class CodeTablet : MonoBehaviour
     private bool _wasRaised;
     private float _glitchTimer;
     private float _scrollTimer;
+
+    // 지금 알림 제목에 반영된 상태 (바뀔 때만 제목을 다시 만듦, -1이면 아직 없음)
+    private int _noticeState = -1;
 
     // Tab을 누를 때마다 들기 / 내리기가 바뀜
     private bool _isOpen;
@@ -226,7 +229,14 @@ public class CodeTablet : MonoBehaviour
         _notice.gameObject.SetActive(isVisible);
         if (!isVisible) return;
 
-        _noticeTitle.text = GetNoticeTitle();
+        // 알림 종류가 바뀐 경우에만 제목 문자열을 새로 만듦 (매 프레임 List와 문자열을 만들지 않게)
+        int state = (_hasNewRules ? 1 : 0) | (_hasNewCode ? 2 : 0) | (_hasUnread ? 4 : 0);
+        if (state != _noticeState)
+        {
+            _noticeState = state;
+            _noticeTitle.text = GetNoticeTitle();
+        }
+
         _notice.alpha = Mathf.Lerp(NoticeMinAlpha, 1f, (Mathf.Sin(Time.time * NoticePulseSpeed) + 1f) * 0.5f);
     }
 

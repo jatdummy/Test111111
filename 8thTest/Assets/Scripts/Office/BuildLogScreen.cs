@@ -34,13 +34,13 @@ public class BuildLogScreen : MonoBehaviour
     [SerializeField] private TextAsset _source;
 
     // 화면에 보이는 줄 수 (넘치면 위로 밀려 올라감)
-    [SerializeField] private int _visibleLines = 9;
+    [SerializeField, Min(1)] private int _visibleLines = 9;
 
     // 1초에 치는 글자 수
-    [SerializeField] private float _charsPerSecond = 12f;
+    [SerializeField, Min(0f)] private float _charsPerSecond = 12f;
 
     // 한 줄을 다 칠 때마다 이상한 주석이 끼어들 확률 (0이면 없음)
-    [SerializeField] private float _strangeLineChance = 0f;
+    [SerializeField, Range(0f, 1f)] private float _strangeLineChance = 0f;
 
     // 가끔 끼어드는 이상한 주석
     [SerializeField] private string[] _strangeLines =
@@ -50,6 +50,7 @@ public class BuildLogScreen : MonoBehaviour
         "// 06:00은 오지 않는다",
     };
 
+    // 완성된 줄 (넣을 때 한 번만 색을 입혀 보관)
     private readonly List<string> _doneLines = new();
     private readonly StringBuilder _builder = new();
     private string[] _sourceLines;
@@ -68,7 +69,7 @@ public class BuildLogScreen : MonoBehaviour
         _sourceIndex = Random.Range(0, _sourceLines.Length);
         for (int i = 0; i < _visibleLines - 1; i++)
         {
-            _doneLines.Add(TakeSourceLine());
+            _doneLines.Add(Highlight(TakeSourceLine()));
         }
 
         StartLine(TakeSourceLine());
@@ -80,9 +81,13 @@ public class BuildLogScreen : MonoBehaviour
         // 자리에 앉아 손을 올리기 전에는 화면이 멈춰 있음
         if (_typist != null && !_typist.enabled) return;
 
-        UpdateCursor();
-        TypeCharacters();
-        Render();
+        // 글자가 쳐졌거나 커서가 깜빡인 프레임에만 다시 그림 (매 프레임 문자열을 만들지 않게)
+        bool isCursorChanged = UpdateCursor();
+        bool isTyped = TypeCharacters();
+        if (isCursorChanged || isTyped)
+        {
+            Render();
+        }
     }
 
     private string TakeSourceLine()
@@ -99,21 +104,26 @@ public class BuildLogScreen : MonoBehaviour
         _typedChars = line.Length - line.TrimStart().Length;
     }
 
-    private void UpdateCursor()
+    // 커서가 깜빡였으면 true
+    private bool UpdateCursor()
     {
         _blinkTimer += Time.deltaTime;
-        if (_blinkTimer < CursorBlinkSeconds) return;
+        if (_blinkTimer < CursorBlinkSeconds) return false;
 
         _blinkTimer = 0f;
         _isCursorOn = !_isCursorOn;
+        return true;
     }
 
-    private void TypeCharacters()
+    // 이번 프레임에 한 글자라도 쳤으면 true
+    private bool TypeCharacters()
     {
+        bool isTyped = false;
         _typeTimer += Time.deltaTime * _charsPerSecond;
         while (_typeTimer >= 1f)
         {
             _typeTimer -= 1f;
+            isTyped = true;
             if (_typedChars < _currentLine.Length)
             {
                 _typedChars++;
@@ -124,11 +134,13 @@ public class BuildLogScreen : MonoBehaviour
             PushDoneLine(_currentLine);
             StartLine(PickNextLine());
         }
+
+        return isTyped;
     }
 
     private void PushDoneLine(string line)
     {
-        _doneLines.Add(line);
+        _doneLines.Add(Highlight(line));
         if (_doneLines.Count > _visibleLines - 1)
         {
             _doneLines.RemoveAt(0);
@@ -149,7 +161,7 @@ public class BuildLogScreen : MonoBehaviour
         _builder.Clear();
         foreach (string line in _doneLines)
         {
-            _builder.AppendLine(Highlight(line));
+            _builder.AppendLine(line);
         }
 
         // 치고 있는 줄은 색 없이 그대로 + 깜빡이는 커서

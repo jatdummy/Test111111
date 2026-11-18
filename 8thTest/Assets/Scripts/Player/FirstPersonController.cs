@@ -11,20 +11,20 @@ public class FirstPersonController : MonoBehaviour
 
     [Header("이동")]
     // 걷기 속도(초당 거리)
-    [SerializeField] private float _walkSpeed = 2.2f;
+    [SerializeField, Min(0f)] private float _walkSpeed = 2.2f;
 
     // 달리기 속도(초당 거리)
-    [SerializeField] private float _runSpeed = 3.6f;
+    [SerializeField, Min(0f)] private float _runSpeed = 3.6f;
 
     // 태블릿을 보는 동안 걷기 속도 배율 (0이면 멈춰서 봄, 1이면 감속 없음)
-    [SerializeField] private float _readingSpeedMultiplier = 0.5f;
+    [SerializeField, Range(0f, 1f)] private float _readingSpeedMultiplier = 0.5f;
 
     // 코드 태블릿 (보는 동안 달리기 불가, 감속)
     [SerializeField] private CodeTablet _codeTablet;
 
     [Header("시점")]
     // 마우스 감도(픽셀당 회전 각도)
-    [SerializeField] private float _lookSensitivity = 0.1f;
+    [SerializeField, Min(0f)] private float _lookSensitivity = 0.1f;
 
     // 위아래로 회전하는 카메라 축
     [SerializeField] private Transform _cameraPivot;

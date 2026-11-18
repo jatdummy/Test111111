@@ -10,7 +10,7 @@ public class AutoDoor : MonoBehaviour
     [SerializeField] private GameObject _doorPanel;
 
     // 문이 열리는 거리 (0이면 항상 닫힘)
-    [SerializeField] private float _openDistance = 2.5f;
+    [SerializeField, Min(0f)] private float _openDistance = 2.5f;
 
     // 문짝을 밀어 여는 장치 (비워 두면 문짝을 바로 숨기고 보이는 방식)
     [SerializeField] private SlidingDoor _slidingDoor;
@@ -22,7 +22,7 @@ public class AutoDoor : MonoBehaviour
     [SerializeField] private Vector3 _exitDirection = Vector3.forward;
 
     // 문에서 이만큼 지나가면 잠김 (문 안쪽으로 돌아오면 다시 풀림)
-    [SerializeField] private float _lockDistance = 0.8f;
+    [SerializeField, Min(0f)] private float _lockDistance = 0.8f;
 
     private bool _isLocked;
 

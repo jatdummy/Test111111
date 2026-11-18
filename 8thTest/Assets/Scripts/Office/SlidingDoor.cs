@@ -10,10 +10,10 @@ public class SlidingDoor : MonoBehaviour
     [SerializeField] private Vector3[] _openOffsets;
 
     // 다 열리는 데 걸리는 시간(초)
-    [SerializeField] private float _openSeconds = 1.2f;
+    [SerializeField, Min(0f)] private float _openSeconds = 1.2f;
 
     // 다 닫히는 데 걸리는 시간(초)
-    [SerializeField] private float _closeSeconds = 1.5f;
+    [SerializeField, Min(0f)] private float _closeSeconds = 1.5f;
 
     private Vector3[] _closedPositions;
 
