@@ -13179,6 +13179,9 @@ GameObject:
   m_Component:
   - component: {fileID: 143057865}
   - component: {fileID: 143057864}
+  - component: {fileID: 143057868}
+  - component: {fileID: 143057867}
+  - component: {fileID: 143057866}
   m_Layer: 0
   m_Name: LoopManager
   m_TagString: Untagged
@@ -13200,12 +13203,73 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LoopManager
   _forwardTeleportOffset: {x: -34.25, y: -3.2, z: -6.2}
   _rollbackTeleportOffset: {x: 11, y: 3.2, z: -4.1}
+  _office: {fileID: 143057868}
+  _monitor: {fileID: 143057867}
+  _hotfix: {fileID: 143057866}
+  _qaLog: {fileID: 361632622}
+  _tablet: {fileID: 18698499}
+  _ending: {fileID: 1364815283}
+--- !u!4 &143057865
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 143057863}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 888214253}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &143057866
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 143057863}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3614675abccb5d149b01c9f4616d156b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HotfixScheduler
+  _hotfixChance: 0.3
+  _hotfixDelay: {x: 6, y: 14}
+  _hotfixStartHour: 1
+  _hotfixApplyChance: 0.5
+--- !u!114 &143057867
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 143057863}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1223c420e0e090c478edd8598c51fa82, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CodeMonitor
   _player: {fileID: 18698496}
   _monitorWakeDistance: 1000
   _monitorTexts:
   - {fileID: 1688439929}
   - {fileID: 1904995820}
   _clockText: {fileID: 800076822}
+--- !u!114 &143057868
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 143057863}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8c0e94f97063164b93cd7b0ddc380c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OfficeState
   _lights: {fileID: 1589246913}
   _colleague: {fileID: 629166857}
   _plants:
@@ -13224,31 +13288,9 @@ MonoBehaviour:
   - {fileID: 3081406813408042651}
   - {fileID: 1645899074}
   - {fileID: 1052355202}
-  _qaLog: {fileID: 361632622}
-  _tablet: {fileID: 18698499}
-  _hotfixChance: 0.3
-  _hotfixDelay: {x: 6, y: 14}
-  _hotfixStartHour: 1
-  _hotfixApplyChance: 0.5
-  _ending: {fileID: 1364815283}
   _defaultLightColor: {r: 1, g: 1, b: 1, a: 1}
   _redLightColor: {r: 1, g: 0.25, b: 0.2, a: 1}
   _blueLightColor: {r: 0.35, g: 0.5, b: 1, a: 1}
---- !u!4 &143057865
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 143057863}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 888214253}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &144748559 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8262196839016357223, guid: 4a4b2dc9b995e1f4c9ec89d0b192508e, type: 3}
