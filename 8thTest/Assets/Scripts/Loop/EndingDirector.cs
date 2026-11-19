@@ -44,6 +44,9 @@ public class EndingDirector : MonoBehaviour
     // 걷기 속도(초당 거리)
     [SerializeField, Min(0f)] private float _walkSpeed = 1.3f;
 
+    // 걸으며 방향을 트는 속도(초당 각도, 꺾이는 지점에서 한 번에 휙 돌지 않게)
+    [SerializeField, Min(0f)] private float _turnSpeed = 360f;
+
     // 인사하며 멈춰 있는 시간(초)
     [SerializeField, Min(0f)] private float _greetSeconds = 2.5f;
 
@@ -185,15 +188,9 @@ public class EndingDirector : MonoBehaviour
         yield return new WaitForSeconds(leaver.StartDelay);
 
         // 앉아 있었다면 일어남
-        leaver.Sit.enabled = false;
-        if (leaver.Typing != null)
-        {
-            leaver.Typing.enabled = false;
-        }
-
+        leaver.Npc.StandUp();
         leaver.Body.position += Vector3.up * leaver.StandRise;
-        leaver.Walk.Speed = _walkSpeed;
-        leaver.Walk.enabled = true;
+        leaver.Npc.Walk(true);
 
         for (int i = 0; i < leaver.Path.Length; i++)
         {
@@ -206,7 +203,7 @@ public class EndingDirector : MonoBehaviour
             yield return WalkToRoutine(leaver, leaver.Path[i]);
         }
 
-        leaver.Walk.enabled = false;
+        leaver.Npc.Walk(false);
         onArrived();
     }
 
@@ -222,7 +219,8 @@ public class EndingDirector : MonoBehaviour
 
     private IEnumerator GreetRoutine(Leaver leaver)
     {
-        leaver.Walk.enabled = false;
+        // 멈춰 서서 플레이어 쪽으로 돌아 인사
+        leaver.Npc.Walk(false);
         _speech.text = leaver.Greeting;
         _speech.gameObject.SetActive(true);
 
@@ -236,7 +234,7 @@ public class EndingDirector : MonoBehaviour
         }
 
         _speech.gameObject.SetActive(false);
-        leaver.Walk.enabled = true;
+        leaver.Npc.Walk(true);
     }
 
     // 말풍선을 머리 위에 두고 플레이어 쪽을 보게 함
@@ -252,13 +250,14 @@ public class EndingDirector : MonoBehaviour
         }
     }
 
-    private static void Face(Transform body, Vector3 target)
+    // 몸을 대상 쪽으로 조금씩 돌림
+    private void Face(Transform body, Vector3 target)
     {
         Vector3 direction = target - body.position;
         direction.y = 0f;
         if (direction.sqrMagnitude < MinFaceDistance) return;
 
-        body.rotation = Quaternion.LookRotation(direction);
+        body.rotation = Quaternion.RotateTowards(body.rotation, Quaternion.LookRotation(direction), _turnSpeed * Time.deltaTime);
     }
 
     private IEnumerator FadeToTitleRoutine()
@@ -292,16 +291,10 @@ public class EndingDirector : MonoBehaviour
         // 동료 본체
         public Transform Body;
 
-        // 걷는 동작
-        public WalkPose Walk;
+        // 걷기 · 서기 · 타자 동작
+        public NpcBody Npc;
 
-        // 앉은 자세
-        public SitPose Sit;
-
-        // 타자 치는 동작 (없으면 비워 둠)
-        public TypingPose Typing;
-
-        // 앉아 있다가 일어날 때 올라가는 높이 (서 있으면 0)
+        // 일어날 때 올라가는 높이 (앉는 애니메이션이 엉덩이를 내리므로 의자 높이 보정용, 보통 0)
         public float StandRise;
 
         // 출발 전 기다리는 시간(초)
@@ -315,27 +308,28 @@ public class EndingDirector : MonoBehaviour
 
         private Vector3 _position;
         private Quaternion _rotation;
-        private bool _isSitting;
         private bool _isTyping;
 
         public void CachePose()
         {
             _position = Body.position;
             _rotation = Body.rotation;
-            _isSitting = Sit.enabled;
-            _isTyping = Typing != null && Typing.enabled;
+            _isTyping = Npc.IsTyping;
         }
 
         // 다시 밤이 되면 원래 자리로
         public void RestorePose()
         {
+            // 다시 켜면 Animator가 처음 상태로 돌아가므로, 켠 뒤에 자세를 다시 정함
             Body.gameObject.SetActive(true);
             Body.SetPositionAndRotation(_position, _rotation);
-            Walk.enabled = false;
-            Sit.enabled = _isSitting;
-            if (Typing != null)
+            if (_isTyping)
             {
-                Typing.enabled = _isTyping;
+                Npc.StartTyping();
+            }
+            else
+            {
+                Npc.StandUp();
             }
         }
     }

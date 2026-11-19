@@ -5,8 +5,14 @@ public class ColleagueWalker : MonoBehaviour
 {
     private const float MinFaceDistance = 0.01f;
 
+    // 앉을 방향과 이 각도 안으로 맞으면 앉기 시작
+    private const float SitFacingTolerance = 2f;
+
     // 걷기 속도(초당 거리)
     [SerializeField, Min(0f)] private float _walkSpeed = 1.1f;
+
+    // 걸으며 방향을 트는 속도(초당 각도, 꺾이는 지점에서 한 번에 휙 돌지 않게)
+    [SerializeField, Min(0f)] private float _turnSpeed = 360f;
 
     // 걷기 시작 위치
     [SerializeField] private Vector3 _startPosition;
@@ -20,31 +26,32 @@ public class ColleagueWalker : MonoBehaviour
     // 걷기 끝 위치 (앉을 자리)
     [SerializeField] private Vector3 _endPosition;
 
-    // 앉을 때 내려가는 높이
-    [SerializeField, Min(0f)] private float _sitDrop = 0.35f;
+    // 앉을 때 내려가는 높이 (앉는 애니메이션이 엉덩이를 내리므로 의자 높이 보정용)
+    [SerializeField, Min(0f)] private float _sitDrop;
 
     // 앉았을 때 바라보는 방향
     [SerializeField] private Vector3 _sitDirection = Vector3.back;
 
-    // 앉은 자세
-    [SerializeField] private SitPose _sitPose;
-
-    // 걷는 동작
-    [SerializeField] private WalkPose _walkPose;
-
-    // 앉은 뒤 타자 치는 동작 (07은 쉬지 않고 빌드를 돌림)
-    [SerializeField] private TypingPose _typingPose;
+    // 걷기 · 앉기 · 타자 동작
+    [SerializeField] private NpcBody _body;
 
     private Transform _player;
     private bool _isWalking;
+    private bool _isTurningToSeat;
     private bool _isStaring;
     private Vector3 _target;
 
     private void Update()
     {
+        if (_isTurningToSeat)
+        {
+            TurnToSeat();
+            return;
+        }
+
         if (!_isWalking) return;
 
-        Face();
+        Face(_target - transform.position);
         WalkToEnd();
     }
 
@@ -52,10 +59,10 @@ public class ColleagueWalker : MonoBehaviour
     public void ResetWalk(bool isStaring)
     {
         _isWalking = false;
+        _isTurningToSeat = false;
         _isStaring = isStaring;
-        _sitPose.enabled = false;
-        _walkPose.enabled = false;
-        _typingPose.enabled = false;
+        _body.StandUp();
+        _body.LookAt(null);
         _target = _doorwayPosition;
         transform.position = _startPosition;
         transform.rotation = Quaternion.LookRotation(_doorwayPosition - _startPosition);
@@ -65,8 +72,10 @@ public class ColleagueWalker : MonoBehaviour
     {
         _player = player;
         _isWalking = true;
-        _walkPose.Speed = _walkSpeed;
-        _walkPose.enabled = true;
+        _body.Walk(true);
+
+        // 이상현상이면 걷는 내내 고개만 돌려 플레이어를 봄 (몸은 걷는 방향 그대로)
+        _body.LookAt(_isStaring ? _player : null);
     }
 
     private void WalkToEnd()
@@ -74,11 +83,12 @@ public class ColleagueWalker : MonoBehaviour
         transform.position = Vector3.MoveTowards(transform.position, _target, _walkSpeed * Time.deltaTime);
         if (transform.position != _target) return;
 
-        // 통로에 도착하면 자리로 꺾고, 자리에 도착하면 앉음
+        // 통로에 도착하면 자리로 꺾고, 자리에 도착하면 앉을 방향으로 돎
         // 문 앞에 도착하면 통로를 따라 자리 앞까지 감
         if (_target == _endPosition)
         {
-            SitDown();
+            _isWalking = false;
+            _isTurningToSeat = true;
         }
         else if (_target == _aislePosition)
         {
@@ -90,25 +100,24 @@ public class ColleagueWalker : MonoBehaviour
         }
     }
 
-    // 도착하면 자리에 앉음
-    private void SitDown()
+    // 앉을 방향으로 다 돌면 자리에 앉음
+    private void TurnToSeat()
     {
-        _isWalking = false;
-        _walkPose.enabled = false;
+        Face(_sitDirection);
+        if (Quaternion.Angle(transform.rotation, Quaternion.LookRotation(_sitDirection)) > SitFacingTolerance) return;
+
+        _isTurningToSeat = false;
+        _body.LookAt(null);
         transform.position += Vector3.down * _sitDrop;
-        transform.rotation = Quaternion.LookRotation(_sitDirection);
-        _sitPose.enabled = true;
-        _typingPose.enabled = true;
+        _body.SitAndType();
     }
 
-    // 평소에는 걷는 방향, 이상현상이면 플레이어 쪽
-    private void Face()
+    // 몸을 주어진 방향으로 조금씩 돌림
+    private void Face(Vector3 direction)
     {
-        Vector3 target = _isStaring ? _player.position : _target;
-        Vector3 direction = target - transform.position;
         direction.y = 0f;
         if (direction.sqrMagnitude < MinFaceDistance) return;
 
-        transform.rotation = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(direction), _turnSpeed * Time.deltaTime);
     }
 }

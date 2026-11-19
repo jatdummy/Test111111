@@ -27,8 +27,8 @@ public class BuildLogScreen : MonoBehaviour
     // 코드를 보여 줄 화면 글자
     [SerializeField] private TextMesh _text;
 
-    // 이 노트북으로 타자 치는 사람 (타자 동작이 켜져 있을 때만 갱신)
-    [SerializeField] private TypingPose _typist;
+    // 이 노트북으로 타자 치는 사람 (타자 치는 동안에만 갱신)
+    [SerializeField] private NpcBody _typist;
 
     // 치고 있는 코드 원본 (끝까지 치면 처음부터 다시)
     [SerializeField] private TextAsset _source;
@@ -79,7 +79,7 @@ public class BuildLogScreen : MonoBehaviour
     private void Update()
     {
         // 자리에 앉아 손을 올리기 전에는 화면이 멈춰 있음
-        if (_typist != null && !_typist.enabled) return;
+        if (_typist != null && !_typist.IsTyping) return;
 
         // 글자가 쳐졌거나 커서가 깜빡인 프레임에만 다시 그림 (매 프레임 문자열을 만들지 않게)
         bool isCursorChanged = UpdateCursor();
