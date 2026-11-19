@@ -44,17 +44,10 @@ public class HotfixScheduler : MonoBehaviour
         _hotfixRoutine = null;
     }
 
-    private IEnumerator DeployHotfixLaterRoutine()
-    {
-        yield return new WaitForSeconds(UnityEngine.Random.Range(_hotfixDelay.x, _hotfixDelay.y));
-        _hotfixRoutine = null;
-        Deploy();
-    }
-
-    private void Deploy()
+    // 이번 빌드에서 낼 수 있는 핫픽스 후보 (테스트에서도 부를 수 있게 static으로 분리)
+    public static List<(HotfixKind Kind, OverrideKind Target)> GetCandidates(OfficeBuild build)
     {
         var candidates = new List<(HotfixKind Kind, OverrideKind Target)>();
-        OfficeBuild build = _build;
 
         // 이상현상을 코드에 반영해 정상으로 만듦 (책장 문이 열린 버그 → BookcaseOpen 추가)
         if (build.Anomaly != null && build.Anomaly.Data.CanBeLegitimized)
@@ -76,7 +69,20 @@ public class HotfixScheduler : MonoBehaviour
         AddCandidate(candidates, build, build.HasNoColleague ? HotfixKind.RemoveLine : HotfixKind.AddLine, OverrideKind.NoColleague);
         AddCandidate(candidates, build, build.HasNoPlants ? HotfixKind.RemoveLine : HotfixKind.AddLine, OverrideKind.NoPlants);
         AddCandidate(candidates, build, build.IsCabinetOpen ? HotfixKind.RemoveLine : HotfixKind.AddLine, OverrideKind.Bookcase);
+        return candidates;
+    }
 
+    private IEnumerator DeployHotfixLaterRoutine()
+    {
+        yield return new WaitForSeconds(UnityEngine.Random.Range(_hotfixDelay.x, _hotfixDelay.y));
+        _hotfixRoutine = null;
+        Deploy();
+    }
+
+    private void Deploy()
+    {
+        OfficeBuild build = _build;
+        List<(HotfixKind Kind, OverrideKind Target)> candidates = GetCandidates(build);
         (HotfixKind kind, OverrideKind target) = candidates[UnityEngine.Random.Range(0, candidates.Count)];
         build.Hotfix = kind;
         build.HotfixTarget = target;
