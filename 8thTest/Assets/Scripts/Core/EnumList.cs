@@ -34,3 +34,11 @@ public enum OverrideKind
     NoPlants = 3,
     Bookcase = 4,
 }
+
+// 태블릿 페이지 (번호가 휠로 넘기는 순서)
+public enum TabletPage
+{
+    Code = 0,
+    Report = 1,
+    Rules = 2,
+}

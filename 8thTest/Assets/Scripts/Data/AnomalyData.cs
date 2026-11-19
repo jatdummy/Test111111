@@ -1,4 +1,4 @@
-using UnityEngine;
+    using UnityEngine;
 
 // 이상현상 하나의 정보 (리포트 이름, 코드 override와의 관계)
 [CreateAssetMenu(fileName = "AnomalyData", menuName = "8번 테스터/Anomaly Data")]

@@ -1,6 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -8,81 +6,20 @@ using UnityEngine.InputSystem;
 // 처음 하는 플레이어용 도우미: 한 판(22:00 → 06:00)에 몇 번만 보낼 수 있고, 다 쓴 뒤 누르면 고장 남
 public class QaLogTerminal : MonoBehaviour
 {
-    // 화면은 큰 상태 한 줄 + 작은 안내 한 줄 (멀리서도, 방송 화면에서도 상태가 읽히게)
-    private const string IdleTitle = "대기 중";
-    private const string IdleSub = "<color=#7D848E>QA 어시스턴트</color>";
-    private const string ReadyTitle = "리포트 준비됨";
-    private const string ReadySub = "<color=#C9CDD3>[E] 태블릿으로 전송</color>";
-    private const string SendingTitle = "<color=#F2C14E>전송 중</color>";
-    private const string SentTitle = "<color=#5FD07A>전송 완료</color>";
-    private const string SentSub = "<color=#C9CDD3>태블릿을 확인하세요</color>";
-    private const string IdleColor = "7D848E";
-    private const string ReadyColor = "F2C14E";
-    private const float ReadyBlinkSpeed = 3f;
-
-    // 리포트 준비됨 글자가 가장 어두울 때의 투명도
-    private const float ReadyMinAlpha = 0.35f;
-    private const float CursorBlinkSeconds = 0.5f;
-    private const string ReportHeader = "<color=#5FD07A>QA 어시스턴트 리포트</color>";
     private const int MaxStoredLines = 60;
-    private const string GlitchChars = "█▓▒░#@%&?!/\\|<>";
     private const float GlitchInterval = 0.06f;
-    private const int DotCount = 3;
 
-    // 전송 중 글자 (점 1~3개, 미리 만들어 두고 돌려 씀)
-    private static readonly string[] SendingTexts = { SendingTitle + ".", SendingTitle + "..", SendingTitle + "..." };
+    // 단말 화면 (상태 글씨 · 화면 재질)
+    [SerializeField] private TerminalScreen _terminalScreen;
 
-    // 고장 직전 깜빡임 (글자가 꺼질 확률, 화면이 꺼질 확률, 불꽃 확률과 개수, 모니터 떨림 각도)
-    private const float GlitchTextHideChance = 0.25f;
-    private const float GlitchScreenOffChance = 0.3f;
-    private const float GlitchSparkChance = 0.35f;
-    private const int GlitchSparkMin = 2;
-    private const int GlitchSparkMax = 6;
-    private const float GlitchShakeAngle = 1.5f;
-
-    // 터질 때 (섬광 시간, 불꽃 개수, 조각이 퍼지는 정도, 위로 튀는 정도, 힘 배율 범위, 회전 속도)
-    private const float ExplodeFlashSeconds = 0.4f;
-    private const int ExplodeSparkCount = 90;
-    private const float ShardSpread = 0.8f;
-    private const float ShardLift = 0.4f;
-    private const float ShardForceMin = 0.6f;
-    private const float ShardForceMax = 1.2f;
-    private const float ShardSpin = 20f;
-
-    // 모니터 꺾임 (최대로 꺾이는 시점 비율, 그때 꺾이는 배율)
-    private const float KickPeakTime = 0.2f;
-    private const float KickOvershoot = 1.4f;
-
-    // 섬광이 지직거릴 때 가장 어두운 비율
-    private const float FlashFlickerMin = 0.4f;
-
-    // 부서진 뒤 합선 불꽃 (개수 범위, 섬광 세기 배율, 섬광 시간)
-    private const int ShortSparkMin = 6;
-    private const int ShortSparkMax = 16;
-    private const float ShortFlashScale = 0.25f;
-    private const float ShortFlashSeconds = 0.12f;
-
-    // 깨진 글자 (줄 수, 줄 길이 범위, 처음 깨질 확률, 끝까지 늘어나는 확률)
-    private const int GlitchLineCount = 6;
-    private const int GlitchLineMin = 8;
-    private const int GlitchLineMax = 30;
-    private const float GlitchBaseChance = 0.3f;
-    private const float GlitchGrowChance = 0.7f;
-
-    // 단말 화면 글자 (큰 상태 글씨)
-    [SerializeField] private TextMesh _screenText;
-
-    // 상태 아래 작은 안내 글씨
-    [SerializeField] private TextMesh _subText;
-
-    // 화면 구석에서 깜빡이는 커서 (컴퓨터가 켜져 있다는 느낌)
-    [SerializeField] private TextMesh _cursorText;
-
-    // 고장 날 때 깨진 글자를 보여 줄 크기 배율 (큰 상태 글씨에 비해 작게)
-    [SerializeField, Range(0f, 1f)] private float _glitchTextScale = 0.5f;
+    // 고장 연출
+    [SerializeField] private TerminalBreakEffect _breakEffect;
 
     // 플레이어 (가까이 왔는지 확인용)
     [SerializeField] private Transform _player;
+
+    // 플레이어 카메라 (화면을 바라보는지 확인용)
+    [SerializeField] private Transform _cameraPivot;
 
     // 리포트를 받을 플레이어 태블릿
     [SerializeField] private CodeTablet _tablet;
@@ -118,79 +55,17 @@ public class QaLogTerminal : MonoBehaviour
     // 고장 날 때 글자가 깨지며 깜빡이는 시간(초)
     [SerializeField, Min(0.01f)] private float _breakSeconds = 1.4f;
 
-    // 모니터 화면 판 (고장 나면 꺼진 재질로 바뀜)
-    [SerializeField] private Renderer _screen;
-
-    // 꺼진 화면 재질
-    [SerializeField] private Material _deadScreenMaterial;
-
-    // 고장 나면 보이는 화면 금
-    [SerializeField] private GameObject _cracks;
-
-    // 부서질 때 뒤로 꺾이는 모니터 (몸체 · 화면 · 글자 · 금이 자식, 기준점은 받침대 위)
-    [SerializeField] private Transform _monitor;
-
-    // 부서진 뒤 모니터가 꺾여 있는 각도
-    [SerializeField] private Vector3 _brokenTilt = new(-16f, 11f, -7f);
-
-    // 꺾일 때 튕기는 시간(초)
-    [SerializeField, Min(0.01f)] private float _kickSeconds = 0.5f;
-
-    // 화면에서 튀는 불꽃
-    [SerializeField] private ParticleSystem _sparks;
-
-    // 부서진 뒤 피어오르는 연기
-    [SerializeField] private ParticleSystem _smoke;
-
-    // 터질 때 번쩍이는 불빛
-    [SerializeField] private Light _flash;
-
-    // 터질 때 번쩍이는 세기
-    [SerializeField, Min(0f)] private float _flashIntensity = 8f;
-
-    // 화면에서 떨어져 나가는 유리 조각들 (평소엔 꺼져 있음)
-    [SerializeField] private Rigidbody[] _shards;
-
-    // 유리 조각이 튀어 나가는 세기
-    [SerializeField, Min(0f)] private float _shardForce = 2.5f;
-
-    // 터질 때 흔들 플레이어 카메라
-    [SerializeField] private Transform _cameraPivot;
-
-    // 카메라 흔들림 세기와 시간(초)
-    [SerializeField, Min(0f)] private float _shakeAmount = 0.07f;
-    [SerializeField, Min(0.01f)] private float _shakeSeconds = 0.5f;
-
-    // 부서진 뒤 이따금 불꽃이 튀는 간격(초, 최소 ~ 최대)
-    [SerializeField] private Vector2 _sparkInterval = new(1.2f, 3.5f);
-
     // 리포트 받기 (Player/Interact)
     [SerializeField] private InputActionReference _interactAction;
 
-    private readonly List<string> _lines = new();
+    private readonly QaReportLog _log = new(MaxStoredLines);
     private int _sendCount;
     private bool _hasNewFailure;
     private bool _isBusy;
     private bool _isBroken;
-    private Material _liveScreenMaterial;
-    private Quaternion _monitorRotation;
-
-    // 대기 / 준비 글자 색 (깜빡임은 글자 색 알파로)
-    private Color _idleColor;
-    private Color _readyColor;
-
-    // 지금 화면에 넣어 둔 대기 / 준비 글자 (같으면 다시 넣지 않음)
-    private string _shownTitle;
 
     // 씬이 새로 열릴 때마다(새 판, 엔딩 뒤 다시 시작) 멀쩡한 단말에 횟수도 처음부터
-    private void Start()
-    {
-        _liveScreenMaterial = _screen.sharedMaterial;
-        _monitorRotation = _monitor.localRotation;
-        ColorUtility.TryParseHtmlString("#" + IdleColor, out _idleColor);
-        ColorUtility.TryParseHtmlString("#" + ReadyColor, out _readyColor);
-        ShowIdle();
-    }
+    private void Start() => _terminalScreen.ShowIdle(_hasNewFailure);
 
     private void Update()
     {
@@ -199,10 +74,10 @@ public class QaLogTerminal : MonoBehaviour
         bool isNear = Vector3.Distance(_player.position, transform.position) <= _useDistance;
         if (!_isBusy)
         {
-            SetScreenVisible(isNear);
+            _terminalScreen.SetVisible(isNear);
         }
 
-        UpdateScreenAnimation();
+        _terminalScreen.Animate(_hasNewFailure, _isBusy);
 
         // 화면 바로 앞에서 화면을 보고 있어야 [E] 안내가 뜨고 사용할 수 있음
         bool isFacing = isNear && IsFacingScreen();
@@ -229,29 +104,24 @@ public class QaLogTerminal : MonoBehaviour
         _hasNewFailure = true;
         if (!_isBusy && !_isBroken)
         {
-            ShowIdle();
+            _terminalScreen.ShowIdle(_hasNewFailure);
         }
     }
 
     // 판정 기록 한 줄 추가 (리포트에는 최근 몇 줄만 담김)
     public void AddLine(string line)
     {
-        _lines.Add(line);
-        if (_lines.Count > MaxStoredLines)
-        {
-            _lines.RemoveAt(0);
-        }
-
+        _log.Add(line);
         if (!_isBusy && !_isBroken)
         {
-            ShowIdle();
+            _terminalScreen.ShowIdle(_hasNewFailure);
         }
     }
 
     // 단말 정면 쪽에 서 있고, 카메라가 화면을 바라보는지
     private bool IsFacingScreen()
     {
-        Vector3 screenCenter = _screen.bounds.center;
+        Vector3 screenCenter = _terminalScreen.Center;
         Vector3 toPlayer = _player.position - screenCenter;
         toPlayer.y = 0f;
         if (Vector3.Angle(-transform.forward, toPlayer) > _frontAngle) return false;
@@ -270,55 +140,6 @@ public class QaLogTerminal : MonoBehaviour
         }
     }
 
-    private void ShowIdle()
-    {
-        _subText.text = _hasNewFailure ? ReadySub : IdleSub;
-        UpdateScreenAnimation();
-    }
-
-    // 리포트가 준비되면 상태 글씨가 천천히 깜빡이고, 구석 커서는 늘 깜빡임
-    // 글자는 상태가 바뀔 때만 넣고, 준비됨 깜빡임은 글자 색 알파만 바꿈 (매 프레임 문자열을 만들지 않게)
-    private void UpdateScreenAnimation()
-    {
-        bool isCursorOn = Time.time % (CursorBlinkSeconds * 2f) < CursorBlinkSeconds;
-        _cursorText.text = isCursorOn ? "<color=#5FD07A>_</color>" : string.Empty;
-        if (_isBusy)
-        {
-            // 전송 · 고장 글자는 각자 색 태그를 씀, 끝나면 대기 / 준비 글자를 다시 넣게 비워 둠
-            _screenText.color = Color.white;
-            _shownTitle = null;
-            return;
-        }
-
-        if (!_hasNewFailure)
-        {
-            ShowTitle(IdleTitle, _idleColor);
-            return;
-        }
-
-        Color color = _readyColor;
-        color.a = Mathf.Lerp(ReadyMinAlpha, 1f, (Mathf.Sin(Time.time * ReadyBlinkSpeed) + 1f) * 0.5f);
-        ShowTitle(ReadyTitle, color);
-    }
-
-    private void ShowTitle(string title, Color color)
-    {
-        if (_shownTitle != title)
-        {
-            _shownTitle = title;
-            _screenText.text = title;
-        }
-
-        _screenText.color = color;
-    }
-
-    private void SetScreenVisible(bool isVisible)
-    {
-        _screenText.gameObject.SetActive(isVisible);
-        _subText.gameObject.SetActive(isVisible);
-        _cursorText.gameObject.SetActive(isVisible);
-    }
-
     // 전송 중 점이 하나씩 늘다가, 태블릿에 알림이 가고 전송 완료
     private IEnumerator SendRoutine()
     {
@@ -329,41 +150,18 @@ public class QaLogTerminal : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < _sendSeconds)
         {
-            int dots = 1 + (int)(elapsed / _sendSeconds * DotCount * 2) % DotCount;
-            _screenText.text = SendingTexts[dots - 1];
-            _subText.text = IdleSub;
+            _terminalScreen.ShowSending(elapsed / _sendSeconds);
             elapsed += Time.deltaTime;
             yield return null;
         }
 
-        _tablet.ReceiveReport(BuildReport());
+        _tablet.ReceiveReport(_log.Build(_reportLines));
         _hasNewFailure = false;
-        _screenText.text = SentTitle;
-        _subText.text = SentSub;
+        _terminalScreen.ShowSent();
         yield return new WaitForSeconds(_sentSeconds);
 
         _isBusy = false;
-        ShowIdle();
-    }
-
-    // 태블릿에 보낼 리포트 (보낸 시각의 최근 판정 기록, 틀렸으면 이유가 붙어 있음)
-    private string BuildReport()
-    {
-        var builder = new StringBuilder();
-        builder.AppendLine(ReportHeader);
-        builder.AppendLine();
-
-        int start = Mathf.Max(0, _lines.Count - _reportLines);
-        for (int i = start; i < _lines.Count; i++)
-        {
-            builder.Append(_lines[i]);
-            if (i < _lines.Count - 1)
-            {
-                builder.AppendLine();
-            }
-        }
-
-        return builder.ToString();
+        _terminalScreen.ShowIdle(_hasNewFailure);
     }
 
     // 글자가 깨지며 화면이 깜빡이다가 터짐
@@ -371,147 +169,29 @@ public class QaLogTerminal : MonoBehaviour
     {
         _isBusy = true;
         _prompt.SetActive(false);
-        SetScreenVisible(true);
-        _subText.gameObject.SetActive(false);
-        _cursorText.gameObject.SetActive(false);
-        _screenText.characterSize *= _glitchTextScale;
+        _terminalScreen.BeginGlitch();
 
         float elapsed = 0f;
         while (elapsed < _breakSeconds)
         {
-            _screenText.text = CreateGlitchText(elapsed / _breakSeconds);
-            _screenText.gameObject.SetActive(Random.value > GlitchTextHideChance);
-            _screen.sharedMaterial = Random.value > GlitchScreenOffChance ? _liveScreenMaterial : _deadScreenMaterial;
-            if (Random.value < GlitchSparkChance)
-            {
-                _sparks.Emit(Random.Range(GlitchSparkMin, GlitchSparkMax));
-            }
-
-            _monitor.localRotation = _monitorRotation * Quaternion.Euler(Random.insideUnitSphere * GlitchShakeAngle);
+            _terminalScreen.ShowGlitch(elapsed / _breakSeconds);
+            _breakEffect.Tremble();
             elapsed += GlitchInterval;
             yield return new WaitForSeconds(GlitchInterval);
         }
 
         SetBroken();
-
-        // 터짐: 유리 조각, 불꽃, 섬광, 모니터가 뒤로 꺾이고 화면이 흔들림
-        Explode();
-        StartCoroutine(KickRoutine());
-        StartCoroutine(FlashRoutine(_flashIntensity, ExplodeFlashSeconds));
-        StartCoroutine(ShakeRoutine());
-    }
-
-    private void Explode()
-    {
-        _sparks.Emit(ExplodeSparkCount);
-        Vector3 outward = -_monitor.forward;
-        foreach (Rigidbody shard in _shards)
-        {
-            shard.gameObject.SetActive(true);
-            shard.transform.SetParent(null, true);
-            shard.isKinematic = false;
-
-            // 화면 앞쪽으로 흩어지며 떨어짐
-            Vector3 spread = Random.insideUnitSphere * ShardSpread + Vector3.up * ShardLift;
-            shard.linearVelocity = (outward + spread) * _shardForce * Random.Range(ShardForceMin, ShardForceMax);
-            shard.angularVelocity = Random.insideUnitSphere * ShardSpin;
-        }
-    }
-
-    // 뒤로 확 꺾였다가 반동으로 조금 돌아와 멈춤
-    private IEnumerator KickRoutine()
-    {
-        _monitor.localRotation = _monitorRotation;
-        float elapsed = 0f;
-        while (elapsed < _kickSeconds)
-        {
-            elapsed += Time.deltaTime;
-            float t = elapsed / _kickSeconds;
-            float amount = t < KickPeakTime ? Mathf.Lerp(0f, KickOvershoot, t / KickPeakTime) : Mathf.Lerp(KickOvershoot, 1f, Mathf.SmoothStep(0f, 1f, (t - KickPeakTime) / (1f - KickPeakTime)));
-            _monitor.localRotation = _monitorRotation * Quaternion.Euler(_brokenTilt * amount);
-            yield return null;
-        }
-
-        _monitor.localRotation = _monitorRotation * Quaternion.Euler(_brokenTilt);
-    }
-
-    // 불빛이 지직거리며 꺼짐
-    private IEnumerator FlashRoutine(float intensity, float seconds)
-    {
-        _flash.enabled = true;
-        float elapsed = 0f;
-        while (elapsed < seconds)
-        {
-            elapsed += Time.deltaTime;
-            _flash.intensity = intensity * (1f - elapsed / seconds) * Random.Range(FlashFlickerMin, 1f);
-            yield return null;
-        }
-
-        _flash.enabled = false;
-    }
-
-    private IEnumerator ShakeRoutine()
-    {
-        Vector3 origin = _cameraPivot.localPosition;
-        float elapsed = 0f;
-        while (elapsed < _shakeSeconds)
-        {
-            elapsed += Time.deltaTime;
-            float strength = _shakeAmount * (1f - elapsed / _shakeSeconds);
-            _cameraPivot.localPosition = origin + Random.insideUnitSphere * strength;
-            yield return null;
-        }
-
-        _cameraPivot.localPosition = origin;
-    }
-
-    // 부서진 뒤에도 가끔 합선된 듯 불꽃이 튐
-    private IEnumerator SparkNowRoutine()
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(Random.Range(_sparkInterval.x, _sparkInterval.y));
-            _sparks.Emit(Random.Range(ShortSparkMin, ShortSparkMax));
-            yield return FlashRoutine(_flashIntensity * ShortFlashScale, ShortFlashSeconds);
-        }
     }
 
     private void SetBroken()
     {
         _isBusy = false;
         _isBroken = true;
-        SetScreenVisible(false);
         _prompt.SetActive(false);
+        _terminalScreen.SetBroken();
 
         // 단말이 부서지면 태블릿 리포트 페이지도 먹통
         _tablet.SetReportOffline();
-        _screen.sharedMaterial = _deadScreenMaterial;
-        _cracks.SetActive(true);
-
-        // 꺾인 모니터, 계속 피어오르는 연기, 이따금 튀는 불꽃
-        _monitor.localRotation = _monitorRotation * Quaternion.Euler(_brokenTilt);
-        _smoke.Play();
-        StartCoroutine(SparkNowRoutine());
-    }
-
-    // 시간이 갈수록 더 많이 깨지는 글자
-    private string CreateGlitchText(float progress)
-    {
-        var builder = new StringBuilder();
-        builder.AppendLine("<color=#FF6B6B>FATAL  QA-ASSIST  0x08</color>");
-        for (int line = 0; line < GlitchLineCount; line++)
-        {
-            int length = Random.Range(GlitchLineMin, GlitchLineMax);
-            for (int i = 0; i < length; i++)
-            {
-                bool isGlitch = Random.value < GlitchBaseChance + progress * GlitchGrowChance;
-                builder.Append(isGlitch ? GlitchChars[Random.Range(0, GlitchChars.Length)] : (char)Random.Range('a', 'z' + 1));
-            }
-
-            builder.AppendLine();
-        }
-
-        builder.Append("<color=#FF6B6B>세션 기록 손상 — 전송 불가</color>");
-        return builder.ToString();
+        _breakEffect.Break();
     }
 }
