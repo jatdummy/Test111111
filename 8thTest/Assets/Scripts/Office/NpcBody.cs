@@ -1,40 +1,45 @@
+using System;
 using UnityEngine;
 
-// NPC 몸 동작 (Animator 파라미터로 걷기 · 앉아서 타자 · 서기를 바꾸고, 고개만 대상 쪽으로 돌림)
+// NPC 몸 동작 (Animator 파라미터로 걷기 · 앉아서 타자 · 서기를 바꾸고, 걸을 때는 폰을 듦)
 // 위치와 몸 방향은 부르는 쪽(ColleagueWalker, EndingDirector)이 정함, 꺼진 동안 받은 명령은 무시함 (다시 켜면 처음 상태)
+// 이 캐릭터 몸에 맞춘 자세 보정(고개 · 손 · 앉은 높이 · 턱)은 NpcPoseIk가 맡음
 [RequireComponent(typeof(Animator))]
 public class NpcBody : MonoBehaviour
 {
-    // 고개를 돌릴 눈높이 (대상 발밑이 아니라 얼굴 쪽을 보게)
-    private const float LookHeight = 1.6f;
-
-    private static readonly int IsWalkingHash = Animator.StringToHash("IsWalking");
-    private static readonly int SitHash = Animator.StringToHash("Sit");
-    private static readonly int TypeHash = Animator.StringToHash("Type");
-    private static readonly int StandHash = Animator.StringToHash("Stand");
-
-    // 타자 상태 이름 (AC_OfficeNpc의 상태 이름과 같아야 함)
-    private static readonly int TypingStateHash = Animator.StringToHash("Typing");
-
     // 씬이 시작되자마자 자리에서 타자 (처음부터 앉아 있는 NPC)
     [SerializeField] private bool _startsTyping;
 
-    // 고개를 돌리는 세기 (0이면 안 돌림)
-    [SerializeField, Range(0f, 1f)] private float _lookWeight = 1f;
-
-    // 고개를 돌릴 때 상체가 따라 도는 비율
-    [SerializeField, Range(0f, 1f)] private float _lookBodyWeight = 0.2f;
-
-    // 고개가 돌아가는 한계 (1이면 뒤까지 돌아감)
-    [SerializeField, Range(0f, 1f)] private float _lookClamp = 0.6f;
+    // 걸을 때만 손에 드는 휴대폰 (폰 보며 걷기 동작용, 없으면 비워 둠)
+    [SerializeField] private GameObject _handPhone;
 
     private Animator _animator;
-    private Transform _lookTarget;
+
+    // 앉는 과정 없이 바로 앉은 자세가 됨 (자세 보정이 서서히가 아니라 바로 맞추게)
+    public event Action SatInstantly;
+
+    // 고개를 돌릴 대상 (null이면 정면)
+    public Transform LookTarget { get; private set; }
+
+    // 손에 드는 폰 (보이는지와 상관없이, 없으면 null)
+    public Transform HandPhone => _handPhone != null ? _handPhone.transform : null;
+
+    // 폰을 들고 걷는 중
+    public bool IsOnPhone => _handPhone != null && _handPhone.activeSelf;
 
     // 손을 키보드에 올리고 타자 치는 중
-    public bool IsTyping => _animator.isActiveAndEnabled && _animator.GetCurrentAnimatorStateInfo(0).shortNameHash == TypingStateHash;
+    public bool IsTyping => _animator.isActiveAndEnabled && CurrentState == NpcAnimatorStates.TypingState;
 
-    private void Awake() => _animator = GetComponent<Animator>();
+    // 의자에 다 앉음 (손을 올리는 중이거나 타자 중)
+    public bool IsSeated => _animator.isActiveAndEnabled && NpcAnimatorStates.IsSeated(CurrentState);
+
+    private int CurrentState => _animator.GetCurrentAnimatorStateInfo(0).shortNameHash;
+
+    private void Awake()
+    {
+        _animator = GetComponent<Animator>();
+        ShowPhone(false);
+    }
 
     private void Start()
     {
@@ -44,24 +49,25 @@ public class NpcBody : MonoBehaviour
         }
     }
 
-    // 고개 돌리기 (Animator 레이어의 IK Pass가 켜져 있어야 불림)
-    private void OnAnimatorIK(int layerIndex)
+    // 앉는 동작이 엉덩이를 뒤로 옮기는 만큼만 실제 위치를 옮김 (다 앉은 뒤 몸이 앞으로 튀지 않게)
+    // 걷기 · 타자 중의 위치는 부르는 쪽이 정하므로 그대로 둠
+    private void OnAnimatorMove()
     {
-        if (_lookTarget == null)
-        {
-            _animator.SetLookAtWeight(0f);
-            return;
-        }
+        bool isSitting = CurrentState == NpcAnimatorStates.StandToSitState
+            || (_animator.IsInTransition(0) && _animator.GetNextAnimatorStateInfo(0).shortNameHash == NpcAnimatorStates.StandToSitState);
+        if (!isSitting) return;
 
-        _animator.SetLookAtWeight(_lookWeight, _lookBodyWeight, 1f, 1f, _lookClamp);
-        _animator.SetLookAtPosition(_lookTarget.position + Vector3.up * LookHeight);
+        Vector3 delta = _animator.deltaPosition;
+        delta.y = 0f;
+        transform.position += delta;
     }
 
     public void Walk(bool isWalking)
     {
         if (!_animator.isActiveAndEnabled) return;
 
-        _animator.SetBool(IsWalkingHash, isWalking);
+        _animator.SetBool(NpcAnimatorStates.IsWalking, isWalking);
+        ShowPhone(isWalking);
     }
 
     // 걷다가 의자에 앉아 손을 키보드에 올림 (이후 타자까지 자동으로 이어짐)
@@ -70,7 +76,8 @@ public class NpcBody : MonoBehaviour
     {
         if (!_animator.isActiveAndEnabled) return;
 
-        _animator.SetTrigger(SitHash);
+        _animator.SetTrigger(NpcAnimatorStates.Sit);
+        ShowPhone(false);
     }
 
     // 앉는 과정 없이 바로 타자 (처음부터 앉아 있거나, 다시 밤이 되어 자리로 돌아갈 때)
@@ -79,8 +86,10 @@ public class NpcBody : MonoBehaviour
         if (!_animator.isActiveAndEnabled) return;
 
         ClearTriggers();
-        _animator.SetBool(IsWalkingHash, false);
-        _animator.SetTrigger(TypeHash);
+        _animator.SetBool(NpcAnimatorStates.IsWalking, false);
+        _animator.SetTrigger(NpcAnimatorStates.Type);
+        ShowPhone(false);
+        SatInstantly?.Invoke();
     }
 
     // 어떤 상태에서든 선 자세로 (엔딩 출발, 루프 처음으로 되돌릴 때)
@@ -89,18 +98,28 @@ public class NpcBody : MonoBehaviour
         if (!_animator.isActiveAndEnabled) return;
 
         ClearTriggers();
-        _animator.SetBool(IsWalkingHash, false);
-        _animator.SetTrigger(StandHash);
+        _animator.SetBool(NpcAnimatorStates.IsWalking, false);
+        _animator.SetTrigger(NpcAnimatorStates.Stand);
+        ShowPhone(false);
     }
 
     // 고개를 대상 쪽으로 (null이면 정면)
-    public void LookAt(Transform target) => _lookTarget = target;
+    public void LookAt(Transform target) => LookTarget = target;
+
+    // 앉거나 멈추면 폰을 넣음 (앉는 동작 중에 손에 폰이 남아 있지 않게)
+    private void ShowPhone(bool isShown)
+    {
+        if (_handPhone != null)
+        {
+            _handPhone.SetActive(isShown);
+        }
+    }
 
     // 처리되지 않고 남은 트리거가 다음 동작에 끼어들지 않게
     private void ClearTriggers()
     {
-        _animator.ResetTrigger(SitHash);
-        _animator.ResetTrigger(TypeHash);
-        _animator.ResetTrigger(StandHash);
+        _animator.ResetTrigger(NpcAnimatorStates.Sit);
+        _animator.ResetTrigger(NpcAnimatorStates.Type);
+        _animator.ResetTrigger(NpcAnimatorStates.Stand);
     }
 }

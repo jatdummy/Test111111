@@ -166,7 +166,7 @@ public class BuildLogScreen : MonoBehaviour
 
         // 치고 있는 줄은 색 없이 그대로 + 깜빡이는 커서
         string typed = _currentLine.Substring(0, Mathf.Min(_typedChars, _currentLine.Length));
-        _builder.Append(Colorize(typed + (_isCursorOn ? "_" : string.Empty), TextColor));
+        _builder.Append(RichText.Colorize(typed + (_isCursorOn ? "_" : string.Empty), TextColor));
         _text.text = _builder.ToString();
     }
 
@@ -175,19 +175,17 @@ public class BuildLogScreen : MonoBehaviour
     {
         int comment = line.IndexOf("//");
         string code = comment >= 0 ? line.Substring(0, comment) : line;
-        string tail = comment >= 0 ? Colorize(line.Substring(comment), CommentColor) : string.Empty;
+        string tail = comment >= 0 ? RichText.Colorize(line.Substring(comment), CommentColor) : string.Empty;
 
         string colored = TokenPattern.Replace(code, match =>
         {
             string token = match.Value;
-            if (char.IsDigit(token[0])) return Colorize(token, NumberColor);
-            if (Keywords.Contains(token)) return Colorize(token, KeywordColor);
-            if (char.IsUpper(token[0])) return Colorize(token, TypeColor);
+            if (char.IsDigit(token[0])) return RichText.Colorize(token, NumberColor);
+            if (Keywords.Contains(token)) return RichText.Colorize(token, KeywordColor);
+            if (char.IsUpper(token[0])) return RichText.Colorize(token, TypeColor);
             return token;
         });
 
-        return Colorize(colored, TextColor) + tail;
+        return RichText.Colorize(colored, TextColor) + tail;
     }
-
-    private static string Colorize(string text, string color) => $"<color={color}>{text}</color>";
 }

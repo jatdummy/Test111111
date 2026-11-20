@@ -26,6 +26,15 @@ public class AutoDoor : MonoBehaviour
 
     private bool _isLocked;
 
+    // 열리는 거리가 0인 문은 항상 닫혀 있으므로 한 번 닫아 두고 매 프레임 거리를 재지 않음
+    private void Start()
+    {
+        if (_openDistance > 0f) return;
+
+        UpdateDoor();
+        enabled = false;
+    }
+
     private void Update() => UpdateDoor();
 
     private void UpdateDoor()

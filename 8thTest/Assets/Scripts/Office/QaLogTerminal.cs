@@ -31,7 +31,7 @@ public class QaLogTerminal : MonoBehaviour
     [SerializeField] private UnityEngine.UI.Text _promptText;
 
     // 이 거리 안에 들어오면 화면이 켜지고 전송할 수 있음
-    [SerializeField, Min(0f)] private float _useDistance = 1.8f;
+    [SerializeField, Min(0f)] private float _useDistance = 1.2f;
 
     // 화면 정면에서 이 각도 안에 서 있어야 사용할 수 있음 (옆이나 뒤에서는 안 됨)
     [SerializeField, Range(0f, 180f)] private float _frontAngle = 40f;
@@ -43,7 +43,7 @@ public class QaLogTerminal : MonoBehaviour
     [SerializeField, Min(1)] private int _reportLines = 9;
 
     // 전송 중 문구를 보여 주는 시간(초)
-    [SerializeField, Min(0.01f)] private float _sendSeconds = 1.2f;
+    [SerializeField, Min(0.01f)] private float _sendSeconds = 0.8f;
 
     // 전송 완료 문구를 보여 주는 시간(초)
     [SerializeField, Min(0f)] private float _sentSeconds = 1.5f;

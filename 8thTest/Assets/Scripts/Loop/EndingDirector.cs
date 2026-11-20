@@ -42,7 +42,7 @@ public class EndingDirector : MonoBehaviour
     [SerializeField] private Leaver[] _leavers;
 
     // 걷기 속도(초당 거리)
-    [SerializeField, Min(0f)] private float _walkSpeed = 1.3f;
+    [SerializeField, Min(0f)] private float _walkSpeed = 0.85f;
 
     // 걸으며 방향을 트는 속도(초당 각도, 꺾이는 지점에서 한 번에 휙 돌지 않게)
     [SerializeField, Min(0f)] private float _turnSpeed = 360f;
@@ -189,7 +189,6 @@ public class EndingDirector : MonoBehaviour
 
         // 앉아 있었다면 일어남
         leaver.Npc.StandUp();
-        leaver.Body.position += Vector3.up * leaver.StandRise;
         leaver.Npc.Walk(true);
 
         for (int i = 0; i < leaver.Path.Length; i++)
@@ -209,10 +208,9 @@ public class EndingDirector : MonoBehaviour
 
     private IEnumerator WalkToRoutine(Leaver leaver, Vector3 target)
     {
-        while (leaver.Body.position != target)
+        while (!NpcMotion.StepTowards(leaver.Body, target, _walkSpeed))
         {
-            leaver.Body.position = Vector3.MoveTowards(leaver.Body.position, target, _walkSpeed * Time.deltaTime);
-            Face(leaver.Body, target);
+            NpcMotion.TurnTowards(leaver.Body, target - leaver.Body.position, _turnSpeed);
             yield return null;
         }
     }
@@ -227,7 +225,7 @@ public class EndingDirector : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < _greetSeconds)
         {
-            Face(leaver.Body, _player.position);
+            NpcMotion.TurnTowards(leaver.Body, _player.position - leaver.Body.position, _turnSpeed);
             ShowSpeechAbove(leaver.Body);
             elapsed += Time.deltaTime;
             yield return null;
@@ -248,16 +246,6 @@ public class EndingDirector : MonoBehaviour
         {
             speech.rotation = Quaternion.LookRotation(direction);
         }
-    }
-
-    // 몸을 대상 쪽으로 조금씩 돌림
-    private void Face(Transform body, Vector3 target)
-    {
-        Vector3 direction = target - body.position;
-        direction.y = 0f;
-        if (direction.sqrMagnitude < MinFaceDistance) return;
-
-        body.rotation = Quaternion.RotateTowards(body.rotation, Quaternion.LookRotation(direction), _turnSpeed * Time.deltaTime);
     }
 
     private IEnumerator FadeToTitleRoutine()
@@ -293,9 +281,6 @@ public class EndingDirector : MonoBehaviour
 
         // 걷기 · 서기 · 타자 동작
         public NpcBody Npc;
-
-        // 일어날 때 올라가는 높이 (앉는 애니메이션이 엉덩이를 내리므로 의자 높이 보정용, 보통 0)
-        public float StandRise;
 
         // 출발 전 기다리는 시간(초)
         public float StartDelay;
