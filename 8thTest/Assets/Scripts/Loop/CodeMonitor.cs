@@ -15,20 +15,12 @@ public class CodeMonitor : MonoBehaviour
         "6. 06:00이 되면 퇴근하셔도 좋습니다.",
     };
 
-    // 플레이어 (모니터 켜짐 거리 계산용)
-    [SerializeField] private Transform _player;
-
-    // 모니터가 켜지는 거리 (멀리서는 코드가 바뀌는 순간이 보이지 않게)
-    [SerializeField, Min(0f)] private float _monitorWakeDistance = 2.5f;
-
     [Header("화면")]
-    // 코드를 보여 줄 모니터 글자 (시작 구역, 끝 구역)
+    // 코드를 보여 줄 글자 (리뷰 모니터, 태블릿 코드 페이지, 항상 켜져 있음)
     [SerializeField] private TextMesh[] _monitorTexts;
 
     // 통로 벽시계 글자
     [SerializeField] private TextMesh _clockText;
-
-    private void Update() => UpdateMonitorWake();
 
     // 이번 빌드의 코드와 시각을 모니터, 시계에 표시
     public void Show(OfficeBuild build, int hoursPassed, bool isCleared)
@@ -56,18 +48,6 @@ public class CodeMonitor : MonoBehaviour
         return builder.ToString();
     }
 
-    // 가까이 가야 모니터 글자가 켜짐
-    private void UpdateMonitorWake()
-    {
-        foreach (TextMesh monitorText in _monitorTexts)
-        {
-            // 높이는 빼고 바닥 위 거리만 잼 (벽 위쪽 모니터와 발 위치의 높이 차 때문에 바로 밑에서도 꺼지지 않게)
-            Vector3 offset = monitorText.transform.position - _player.position;
-            offset.y = 0f;
-            monitorText.gameObject.SetActive(offset.magnitude <= _monitorWakeDistance);
-        }
-    }
-
     private static string BuildCodeText(OfficeBuild build, int hoursPassed, bool isCleared)
     {
         var builder = new StringBuilder();
@@ -93,7 +73,7 @@ public class CodeMonitor : MonoBehaviour
 
         // 바뀐 값이 없으면 원본과 같은 한 줄로 표시
         bool hasOverride = build.LightOverride != LightOverride.None || build.HasNoColleague
-            || build.HasNoPlants || build.IsCabinetOpen || build.Hotfix != HotfixKind.None;
+            || build.IsCabinetOpen || build.Hotfix != HotfixKind.None;
         if (build.IsOriginal || !hasOverride)
         {
             builder.AppendLine($"class Office_{number:00} : BaseOffice {{ }}");
@@ -118,11 +98,6 @@ public class CodeMonitor : MonoBehaviour
         if (build.HasNoColleague)
         {
             AppendOverrideLine(builder, build, OverrideKind.NoColleague);
-        }
-
-        if (build.HasNoPlants)
-        {
-            AppendOverrideLine(builder, build, OverrideKind.NoPlants);
         }
 
         if (build.IsCabinetOpen)

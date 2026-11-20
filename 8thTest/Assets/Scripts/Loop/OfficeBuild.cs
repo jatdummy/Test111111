@@ -4,7 +4,6 @@ public struct OfficeBuild
     public bool IsOriginal;
     public LightOverride LightOverride;
     public bool HasNoColleague;
-    public bool HasNoPlants;
     public bool IsCabinetOpen;
     public Anomaly Anomaly;
 

@@ -8,8 +8,8 @@ public class BuildGenerator
     private const int MaxBugStreak = 4;
     private const float NormalBuildChance = 1f / 3f;
     private const float OverrideChance = 0.5f;
-    // 미끼 override 종류 수 (빨간 조명, 파란 조명, 동료 없음, 화분 없음, 책장 열림)
-    private const int OverrideKindCount = 5;
+    // 미끼 override 종류 수 (빨간 조명, 파란 조명, 동료 없음, 책장 열림)
+    private const int OverrideKindCount = 4;
 
     private readonly Anomaly[] _anomalies;
     private Anomaly _lastAnomaly;
@@ -76,7 +76,7 @@ public class BuildGenerator
     }
 
     // 미끼 override 하나 추가 (동료 이상현상과 동료 없음은 함께 내지 않음)
-    // 화분·책장도 같은 소품의 이상현상과 그 소품을 바꾸는 override는 함께 내지 않음
+    // 책장도 같은 소품의 이상현상과 그 소품을 바꾸는 override는 함께 내지 않음
     private static void AddRandomOverride(ref OfficeBuild build)
     {
         // 이번 이상현상과 겹치는 종류가 뽑히면 다시 뽑음
@@ -95,10 +95,6 @@ public class BuildGenerator
                 case OverrideKind.NoColleague:
                     if (IsBlocked(build, OverrideKind.NoColleague)) continue;
                     build.HasNoColleague = true;
-                    return;
-                case OverrideKind.NoPlants:
-                    if (IsBlocked(build, OverrideKind.NoPlants)) continue;
-                    build.HasNoPlants = true;
                     return;
                 default:
                     if (IsBlocked(build, OverrideKind.Bookcase)) continue;

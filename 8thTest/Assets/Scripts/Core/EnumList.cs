@@ -31,8 +31,7 @@ public enum OverrideKind
     RedLight = 0,
     BlueLight = 1,
     NoColleague = 2,
-    NoPlants = 3,
-    Bookcase = 4,
+    Bookcase = 3,
 }
 
 // 태블릿 페이지 (번호가 휠로 넘기는 순서)

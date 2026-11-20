@@ -67,7 +67,6 @@ public class HotfixScheduler : MonoBehaviour
         }
 
         AddCandidate(candidates, build, build.HasNoColleague ? HotfixKind.RemoveLine : HotfixKind.AddLine, OverrideKind.NoColleague);
-        AddCandidate(candidates, build, build.HasNoPlants ? HotfixKind.RemoveLine : HotfixKind.AddLine, OverrideKind.NoPlants);
         AddCandidate(candidates, build, build.IsCabinetOpen ? HotfixKind.RemoveLine : HotfixKind.AddLine, OverrideKind.Bookcase);
         return candidates;
     }

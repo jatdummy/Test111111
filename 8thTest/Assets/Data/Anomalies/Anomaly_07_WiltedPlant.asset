@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: Anomaly_07_WiltedPlant
   m_EditorClassIdentifier: 
   _reportLabel: 화분 상태
-  _blockedOverrides:
-  - 3
+  _blockedOverrides: []
   _requiredLight: 0
   _canBeLegitimized: 0
   _legitimizeOverride: 0

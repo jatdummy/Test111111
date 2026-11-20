@@ -73,7 +73,7 @@ public class BuildGeneratorTests
         {
             if (build.Anomaly == null) continue;
 
-            foreach (OverrideKind kind in new[] { OverrideKind.RedLight, OverrideKind.BlueLight, OverrideKind.NoColleague, OverrideKind.NoPlants, OverrideKind.Bookcase })
+            foreach (OverrideKind kind in new[] { OverrideKind.RedLight, OverrideKind.BlueLight, OverrideKind.NoColleague, OverrideKind.Bookcase })
             {
                 // 이상현상이 꼭 필요로 하는 조명은 금지 목록에 있어도 코드에 적힘 (금지는 핫픽스로 바꾸지 말라는 뜻)
                 if (IsRequiredLight(build.Anomaly, kind)) continue;
@@ -135,8 +135,6 @@ public class BuildGeneratorTests
                 return build.LightOverride == LightOverride.Blue;
             case OverrideKind.NoColleague:
                 return build.HasNoColleague;
-            case OverrideKind.NoPlants:
-                return build.HasNoPlants;
             default:
                 return build.IsCabinetOpen;
         }

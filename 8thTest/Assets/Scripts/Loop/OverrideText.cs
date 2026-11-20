@@ -11,8 +11,6 @@ public static class OverrideText
                 return "조명 Blue";
             case OverrideKind.NoColleague:
                 return "동료 없음";
-            case OverrideKind.NoPlants:
-                return "화분 없음";
             default:
                 return "책장 열림";
         }
@@ -28,8 +26,6 @@ public static class OverrideText
                 return "override LightColor => Blue;";
             case OverrideKind.NoColleague:
                 return "override NpcCount => 0;";
-            case OverrideKind.NoPlants:
-                return "override PlantCount => 0;";
             default:
                 return "override BookcaseOpen => true;";
         }

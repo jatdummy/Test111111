@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _reportLabel: 책장 문
   _blockedOverrides:
-  - 4
+  - 3
   _requiredLight: 0
   _canBeLegitimized: 1
-  _legitimizeOverride: 4
+  _legitimizeOverride: 3

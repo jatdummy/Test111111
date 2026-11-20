@@ -13,11 +13,11 @@ public class HotfixCandidateTests
     public void TearDown() => _factory.DestroyAll();
 
     [Test]
-    public void NormalBuildHasAllFiveAddLines()
+    public void NormalBuildHasAllFourAddLines()
     {
         List<(HotfixKind Kind, OverrideKind Target)> candidates = HotfixScheduler.GetCandidates(new OfficeBuild());
 
-        Assert.AreEqual(5, candidates.Count);
+        Assert.AreEqual(4, candidates.Count);
         Assert.IsTrue(candidates.TrueForAll(candidate => candidate.Kind == HotfixKind.AddLine));
     }
 
@@ -59,10 +59,10 @@ public class HotfixCandidateTests
     [Test]
     public void ExistingOverrideCanBeRemoved()
     {
-        var build = new OfficeBuild { HasNoPlants = true };
+        var build = new OfficeBuild { HasNoColleague = true };
 
         List<(HotfixKind Kind, OverrideKind Target)> candidates = HotfixScheduler.GetCandidates(build);
 
-        Assert.IsTrue(candidates.Contains((HotfixKind.RemoveLine, OverrideKind.NoPlants)));
+        Assert.IsTrue(candidates.Contains((HotfixKind.RemoveLine, OverrideKind.NoColleague)));
     }
 }

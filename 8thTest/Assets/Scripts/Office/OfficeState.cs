@@ -10,9 +10,6 @@ public class OfficeState : MonoBehaviour
     // 걸어오는 동료
     [SerializeField] private ColleagueWalker _colleague;
 
-    // 복도 화분 (override PlantCount => 0 이면 모두 숨김)
-    [SerializeField] private GameObject[] _plants;
-
     // 책장 (override BookcaseOpen, 핫픽스)
     [SerializeField] private Cabinet _cabinet;
 
@@ -46,7 +43,7 @@ public class OfficeState : MonoBehaviour
         ApplyPropOverrides(build);
     }
 
-    // 핫픽스 내용을 사무실에 바로 반영 (조명 색, 동료, 화분, 책장)
+    // 핫픽스 내용을 사무실에 바로 반영 (조명 색, 동료, 책장)
     public void ApplyHotfix(OfficeBuild build)
     {
         bool isAdded = build.Hotfix == HotfixKind.AddLine;
@@ -59,13 +56,6 @@ public class OfficeState : MonoBehaviour
                 break;
             case OverrideKind.NoColleague:
                 _colleague.gameObject.SetActive(!isAdded);
-                break;
-            case OverrideKind.NoPlants:
-                foreach (GameObject plant in _plants)
-                {
-                    plant.SetActive(!isAdded);
-                }
-
                 break;
             default:
                 if (isAdded)
@@ -100,25 +90,13 @@ public class OfficeState : MonoBehaviour
 
         _colleague.gameObject.SetActive(true);
         _colleague.ResetWalk(false);
-        foreach (GameObject plant in _plants)
-        {
-            plant.SetActive(true);
-        }
 
         _cabinet.Close();
     }
 
-    // 코드에 적힌 소품 override 적용 (화분 없음, 책장 열림)
+    // 코드에 적힌 소품 override 적용 (책장 열림)
     private void ApplyPropOverrides(OfficeBuild build)
     {
-        if (build.HasNoPlants)
-        {
-            foreach (GameObject plant in _plants)
-            {
-                plant.SetActive(false);
-            }
-        }
-
         if (build.IsCabinetOpen)
         {
             _cabinet.Open();

@@ -87,6 +87,9 @@ public class FirstPersonController : MonoBehaviour
 
     private void Move()
     {
+        // 순간이동이나 연출 중 컨트롤러가 꺼져 있으면 이동하지 않음 (꺼진 컨트롤러의 Move는 에러)
+        if (!_controller.enabled) return;
+
         Vector2 input = _moveAction.action.ReadValue<Vector2>();
         float speed = GetSpeed();
         Vector3 direction = transform.right * input.x + transform.forward * input.y;
