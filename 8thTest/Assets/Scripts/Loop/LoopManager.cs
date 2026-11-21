@@ -5,10 +5,13 @@ public class LoopManager : MonoBehaviour
 {
     [Header("루프")]
     // 앞으로 통과했을 때 플레이어를 옮길 거리
-    [SerializeField] private Vector3 _forwardTeleportOffset = new(-27.2f, -3.2f, -6.2f);
+    [SerializeField] private Vector3 _forwardTeleportOffset = new(-34.25f, -3.2f, -6.2f);
 
     // 롤백 계단을 내려가다 통과했을 때 플레이어를 옮길 거리 (롤백 계단실 → 시작 계단실 위층)
-    [SerializeField] private Vector3 _rollbackTeleportOffset = new(-7.4f, 3.2f, 0f);
+    [SerializeField] private Vector3 _rollbackTeleportOffset = new(11f, 3.2f, -4.1f);
+
+    // 두 경로가 함께 도착하는 시작 계단실 (들어온 경로의 계단실과 똑같이 보이게 셔터를 바꿈)
+    [SerializeField] private StairwellRouteView _arrivalStairwell;
 
     [Header("루프 구성 요소")]
     // 빌드대로 사무실을 맞추는 쪽 (조명, 이상현상, 소품)
@@ -68,12 +71,12 @@ public class LoopManager : MonoBehaviour
             // 계단으로 가도 갇히지 않게 이동만 시킴 (판정 없음)
             if (type == LoopTriggerType.Forward)
             {
-                player.Teleport(_forwardTeleportOffset);
+                TeleportForward(player);
             }
 
             if (type == LoopTriggerType.Rollback)
             {
-                player.Teleport(_rollbackTeleportOffset);
+                TeleportRollback(player);
             }
 
             return;
@@ -87,7 +90,7 @@ public class LoopManager : MonoBehaviour
             case LoopTriggerType.Forward:
                 if (!_isArmed) return;
                 Judge(true);
-                player.Teleport(_forwardTeleportOffset);
+                TeleportForward(player);
                 break;
             case LoopTriggerType.Back:
                 if (!_isArmed) return;
@@ -100,7 +103,7 @@ public class LoopManager : MonoBehaviour
                     Judge(false);
                 }
 
-                player.Teleport(_rollbackTeleportOffset);
+                TeleportRollback(player);
                 break;
         }
     }
@@ -113,6 +116,21 @@ public class LoopManager : MonoBehaviour
         _isArmed = true;
         _office.BeginColleagueWalk(player.transform);
         _hotfix.Schedule(_currentBuild, _count);
+    }
+
+    // 승인 계단을 올라간 플레이어를 시작 계단실로 보냄 (도착 계단실도 승인 계단실처럼 위층 계단을 막음)
+    // 텔레포트와 같은 프레임에 셔터를 바꿔야 바뀌는 순간이 보이지 않음
+    private void TeleportForward(FirstPersonController player)
+    {
+        _arrivalStairwell.ShowArrival(true);
+        player.Teleport(_forwardTeleportOffset);
+    }
+
+    // 롤백 계단을 내려간 플레이어를 시작 계단실로 보냄 (도착 계단실도 롤백 계단실처럼 아래층 계단을 막음)
+    private void TeleportRollback(FirstPersonController player)
+    {
+        _arrivalStairwell.ShowArrival(false);
+        player.Teleport(_rollbackTeleportOffset);
     }
 
     // 핫픽스가 배포되면 바뀐 코드로 다시 판단해야 함 (절반쯤은 사무실도 같이 바뀜)

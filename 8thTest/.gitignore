@@ -88,3 +88,6 @@ crashlytics-build.properties
 /[Aa]ssets/DownloadCache.meta
 /[Aa]ssets/Synty/
 /[Aa]ssets/Synty.meta
+
+# Local scene backups (restore points, not for the repo)
+/[Bb]ackups/
