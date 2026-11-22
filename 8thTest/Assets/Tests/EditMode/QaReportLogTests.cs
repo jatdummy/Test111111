@@ -50,4 +50,31 @@ public class QaReportLogTests
 
         StringAssert.EndsWith("only", log.Build(9));
     }
+
+    // 두 번째 리포트에는 첫 번째 리포트로 이미 받은 기록이 섞이지 않음
+    [Test]
+    public void BuildNewHasOnlyLinesSinceLastSend()
+    {
+        var log = new QaReportLog(10);
+        log.Add("first");
+        log.BuildNew(9);
+        log.Add("second");
+
+        string report = log.BuildNew(9);
+
+        StringAssert.DoesNotContain("first", report);
+        StringAssert.EndsWith("second", report);
+    }
+
+    // 리포트를 받을 때마다 제목의 회차가 올라감
+    [Test]
+    public void BuildNewNumbersEachReport()
+    {
+        var log = new QaReportLog(10);
+        log.Add("a");
+        StringAssert.Contains("#1", log.BuildNew(9));
+
+        log.Add("b");
+        StringAssert.Contains("#2", log.BuildNew(9));
+    }
 }

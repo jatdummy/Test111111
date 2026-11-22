@@ -136,7 +136,8 @@ public class QaLogTerminal : MonoBehaviour
         _prompt.SetActive(isVisible);
         if (isVisible)
         {
-            _promptText.text = _hasNewFailure ? "버그 리포트 받기" : "버그 리포트 받기  <color=#9AA0A6>(틀린 판정 없음)</color>";
+            // 새로 틀린 판정이 없으면 짧게 '새 리포트 없음' (한 줄에 들어가게, 지금 빌드의 정답 힌트로 읽히지 않게 '버그 없음'은 쓰지 않음)
+            _promptText.text = _hasNewFailure ? "버그 리포트 받기" : "<color=#9AA0A6>새 리포트 없음</color>";
         }
     }
 
@@ -155,7 +156,8 @@ public class QaLogTerminal : MonoBehaviour
             yield return null;
         }
 
-        _tablet.ReceiveReport(_log.Build(_reportLines));
+        // 지난번에 받은 기록은 빼고 이번 회차에 새로 쌓인 기록만 보냄
+        _tablet.ReceiveReport(_log.BuildNew(_reportLines));
         _hasNewFailure = false;
         _terminalScreen.ShowSent();
         yield return new WaitForSeconds(_sentSeconds);

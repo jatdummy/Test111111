@@ -70,6 +70,14 @@ public class FirstPersonController : MonoBehaviour
         _controller.enabled = true;
     }
 
+    // 지정한 위치로 순간이동하며 좌우 방향을 yawDelta만큼 돌림 (반대로 놓인 계단실 사이를 이어 붙일 때)
+    public void TeleportTo(Vector3 position, float yawDelta)
+    {
+        _controller.enabled = false;
+        transform.SetPositionAndRotation(position, Quaternion.Euler(0f, yawDelta, 0f) * transform.rotation);
+        _controller.enabled = true;
+    }
+
     private void CacheComponents()
     {
         _controller = GetComponent<CharacterController>();

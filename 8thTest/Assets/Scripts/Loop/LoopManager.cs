@@ -7,10 +7,10 @@ public class LoopManager : MonoBehaviour
     // 앞으로 통과했을 때 플레이어를 옮길 거리
     [SerializeField] private Vector3 _forwardTeleportOffset = new(-34.25f, -3.2f, -6.2f);
 
-    // 롤백 계단을 내려가다 통과했을 때 플레이어를 옮길 거리 (롤백 계단실 → 시작 계단실 위층)
-    [SerializeField] private Vector3 _rollbackTeleportOffset = new(11f, 3.2f, -4.1f);
+    // 롤백 계단실 (시작 계단실과 같은 구조를 반대 방향으로 돌려 놓았으므로, 거리만 더하지 않고 계단실 기준 위치 · 방향으로 옮김)
+    [SerializeField] private Transform _rollbackStairwell;
 
-    // 두 경로가 함께 도착하는 시작 계단실 (들어온 경로의 계단실과 똑같이 보이게 셔터를 바꿈)
+    // 두 경로가 함께 도착하는 시작 계단실 (들어온 경로의 계단실과 똑같이 보이게 막는 벽을 바꿈)
     [SerializeField] private StairwellRouteView _arrivalStairwell;
 
     [Header("루프 구성 요소")]
@@ -57,7 +57,7 @@ public class LoopManager : MonoBehaviour
 
     private void OnDisable() => _hotfix.OnHotfixDeployed -= HandleHotfixDeployed;
 
-    // 트리거 통과 처리 (통로 진입, 앞으로, 뒤로)
+    // 트리거 통과 처리 (사무실 진입, 앞으로, 뒤로)
     public void HandleTrigger(LoopTriggerType type, FirstPersonController player)
     {
         // 06:00 이후에는 엘리베이터(퇴근)만 받음, 동료들이 먼저 내려간 뒤에만 탈 수 있음
@@ -108,7 +108,7 @@ public class LoopManager : MonoBehaviour
         }
     }
 
-    // 통로에 들어오면 판정 대기 상태로 전환
+    // 코드판을 지나 사무실에 들어서면 판정 대기 상태로 전환 (한 스테이지 시작, 입구 구역에서는 코드를 읽을 시간을 줌)
     private void EnterCorridor(FirstPersonController player)
     {
         if (_isArmed) return;
@@ -119,7 +119,7 @@ public class LoopManager : MonoBehaviour
     }
 
     // 승인 계단을 올라간 플레이어를 시작 계단실로 보냄 (도착 계단실도 승인 계단실처럼 위층 계단을 막음)
-    // 텔레포트와 같은 프레임에 셔터를 바꿔야 바뀌는 순간이 보이지 않음
+    // 텔레포트와 같은 프레임에 막는 벽을 바꿔야 바뀌는 순간이 보이지 않음
     private void TeleportForward(FirstPersonController player)
     {
         _arrivalStairwell.ShowArrival(true);
@@ -127,10 +127,15 @@ public class LoopManager : MonoBehaviour
     }
 
     // 롤백 계단을 내려간 플레이어를 시작 계단실로 보냄 (도착 계단실도 롤백 계단실처럼 아래층 계단을 막음)
+    // 롤백 계단실은 반대로 돌려 놓았으므로, 롤백 계단실 기준 위치 · 방향을 시작 계단실 기준으로 그대로 옮김
     private void TeleportRollback(FirstPersonController player)
     {
         _arrivalStairwell.ShowArrival(false);
-        player.Teleport(_rollbackTeleportOffset);
+
+        Transform arrival = _arrivalStairwell.transform;
+        Vector3 localPosition = _rollbackStairwell.InverseTransformPoint(player.transform.position);
+        float yawDelta = arrival.eulerAngles.y - _rollbackStairwell.eulerAngles.y;
+        player.TeleportTo(arrival.TransformPoint(localPosition), yawDelta);
     }
 
     // 핫픽스가 배포되면 바뀐 코드로 다시 판단해야 함 (절반쯤은 사무실도 같이 바뀜)
@@ -223,7 +228,7 @@ public class LoopManager : MonoBehaviour
 
         if (!isCorrect)
         {
-            string reason = hasBug ? $"놓친 버그: {GetMissedLabel()}" : GetNormalLabel();
+            string reason = hasBug ? $"놓친 버그 : {GetMissedLabel()}" : GetNormalLabel();
             _qaLog.AddLine(RichText.Colorize($"   └ {reason}", RichText.FailColor));
 
             // 오답이면 시간이 처음으로 돌아감 (롤백과 헷갈리지 않게 '초기화'로 표기)
@@ -236,7 +241,7 @@ public class LoopManager : MonoBehaviour
     private string GetMissedLabel()
     {
         bool isHotfixBug = _currentBuild.Hotfix is HotfixKind.AddLine or HotfixKind.RemoveLine && !_currentBuild.IsHotfixApplied;
-        return isHotfixBug ? $"핫픽스 미반영 ({OverrideText.GetLabel(_currentBuild.HotfixTarget)})" : GetAnomalyLabel();
+        return isHotfixBug ? $"사무실과 다른 핫픽스 [{OverrideText.GetLabel(_currentBuild.HotfixTarget)}]" : GetAnomalyLabel();
     }
 
     private string GetAnomalyLabel() => _currentBuild.Anomaly == null ? string.Empty : _currentBuild.Anomaly.Data.ReportLabel;
@@ -244,9 +249,9 @@ public class LoopManager : MonoBehaviour
     // 정상이었는데 롤백한 경우의 설명
     private string GetNormalLabel()
     {
-        if (_currentBuild.Hotfix == HotfixKind.Legitimize) return $"정상 빌드였음 (핫픽스로 {OverrideText.GetLabel(_currentBuild.HotfixTarget)} 반영)";
-        if (_currentBuild.IsHotfixApplied) return $"정상 빌드였음 (핫픽스 {OverrideText.GetLabel(_currentBuild.HotfixTarget)} 사무실 반영 완료)";
+        if (_currentBuild.Hotfix == HotfixKind.Legitimize) return $"버그 없음 : 핫픽스로 코드에 반영된 [{OverrideText.GetLabel(_currentBuild.HotfixTarget)}]";
+        if (_currentBuild.IsHotfixApplied) return $"버그 없음 : 사무실에도 반영된 핫픽스 [{OverrideText.GetLabel(_currentBuild.HotfixTarget)}]";
 
-        return "정상 빌드였음";
+        return "버그 없음 : 정상 빌드";
     }
 }
