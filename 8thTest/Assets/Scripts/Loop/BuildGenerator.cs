@@ -91,13 +91,13 @@ public class BuildGenerator
         return anomaly;
     }
 
-    private void FillCandidates(int hoursPassed, bool excludesLast)
+    private void FillCandidates(int hoursPassed, bool isLastExcluded)
     {
         _candidates.Clear();
         foreach (Anomaly anomaly in _anomalies)
         {
             if (anomaly.Data.MinHour > hoursPassed) continue;
-            if (excludesLast && anomaly == _lastAnomaly) continue;
+            if (isLastExcluded && anomaly == _lastAnomaly) continue;
 
             _candidates.Add(anomaly);
         }

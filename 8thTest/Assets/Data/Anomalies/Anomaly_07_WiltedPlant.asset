@@ -18,4 +18,4 @@ MonoBehaviour:
   _canBeLegitimized: 0
   _legitimizeOverride: 0
   _minHour: 0
-  _codeLine: override PlantB.State => Withered;
+  _codeLine: 'PlantB.State = PlantState.Withered;'

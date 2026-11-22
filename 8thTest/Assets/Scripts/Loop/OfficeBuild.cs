@@ -36,6 +36,6 @@ public struct OfficeBuild
     // 원본 확인 구간(검수 시작 전)의 빌드
     public static OfficeBuild CreateOriginal() => new() { IsOriginal = true };
 
-    // 모니터, 로그에 나오는 빌드 번호 (원본은 0)
-    public int GetNumber(int hoursPassed) => IsOriginal ? 0 : hoursPassed + 1;
+    // 모니터, 로그에 나오는 빌드 번호 (원본은 0, 판정 빌드는 23:00부터 1번)
+    public int GetNumber(int hoursPassed) => IsOriginal ? 0 : hoursPassed;
 }

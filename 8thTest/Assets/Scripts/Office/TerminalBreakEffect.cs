@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-// QA 어시스턴트 단말이 고장 날 때의 연출 (떨림 · 유리 조각 · 꺾임 · 섬광 · 카메라 흔들림 · 연기 · 불꽃)
+// QA 어시스턴트 단말이 고장 날 때의 연출 (떨림 · 유리 조각 · 꺾임 · 섬광 · 카메라 흔들림 · 연기 · 불꽃 · 폭발음)
 public class TerminalBreakEffect : MonoBehaviour
 {
     // 고장 직전 깜빡임 (불꽃 확률과 개수, 모니터 떨림 각도)
@@ -72,6 +72,9 @@ public class TerminalBreakEffect : MonoBehaviour
     // 부서진 뒤 이따금 불꽃이 튀는 간격(초, 최소 ~ 최대)
     [SerializeField] private Vector2 _sparkInterval = new(1.2f, 3.5f);
 
+    // 터질 때 나는 소리 (폭발음 뒤로 경보음이 잦아듦, 단말 위치에서 들리는 3D 소리)
+    [SerializeField] private AudioSource _breakSound;
+
     private Quaternion _monitorRotation;
 
     private void Awake() => _monitorRotation = _monitor.localRotation;
@@ -98,6 +101,7 @@ public class TerminalBreakEffect : MonoBehaviour
         StartCoroutine(SparkNowRoutine());
 
         Explode();
+        _breakSound.Play();
         StartCoroutine(KickRoutine());
         StartCoroutine(FlashRoutine(_flashIntensity, ExplodeFlashSeconds));
         StartCoroutine(ShakeRoutine());
@@ -152,19 +156,22 @@ public class TerminalBreakEffect : MonoBehaviour
         _flash.enabled = false;
     }
 
+    // 지난 프레임에 더한 흔들림만 빼고 새로 더함 (헤드밥처럼 같은 카메라 축을 움직이는 효과와 겹쳐도 높이가 어긋나지 않게)
     private IEnumerator ShakeRoutine()
     {
-        Vector3 origin = _cameraPivot.localPosition;
+        Vector3 applied = Vector3.zero;
         float elapsed = 0f;
         while (elapsed < _shakeSeconds)
         {
             elapsed += Time.deltaTime;
             float strength = _shakeAmount * (1f - elapsed / _shakeSeconds);
-            _cameraPivot.localPosition = origin + Random.insideUnitSphere * strength;
+            Vector3 offset = Random.insideUnitSphere * strength;
+            _cameraPivot.localPosition += offset - applied;
+            applied = offset;
             yield return null;
         }
 
-        _cameraPivot.localPosition = origin;
+        _cameraPivot.localPosition -= applied;
     }
 
     // 부서진 뒤에도 가끔 합선된 듯 불꽃이 튐

@@ -18,4 +18,4 @@ MonoBehaviour:
   _canBeLegitimized: 0
   _legitimizeOverride: 0
   _minHour: 0
-  _codeLine: 'override Monitor_QA08 => BlueScreen;'
+  _codeLine: 'Monitor_QA08.IsBlueScreen = true;'

@@ -28,7 +28,7 @@ public class BuildGeneratorTests
         _lightMismatch = _factory.Create("조명 불일치", new[] { OverrideKind.RedLight, OverrideKind.BlueLight }, LightOverride.Blue);
         _cabinet = _factory.Create("책장 문", new[] { OverrideKind.Bookcase }, canBeLegitimized: true, legitimizeOverride: OverrideKind.Bookcase);
         _late = _factory.Create("늦은 시간", minHour: 4);
-        _coded = _factory.Create("코드로 적는 화분", codeLine: "override PlantState => Withered;");
+        _coded = _factory.Create("코드로 적는 화분", codeLine: "PlantB.State = PlantState.Withered;");
         _generator = new BuildGenerator(new[] { _plain, _stare, _lightMismatch, _cabinet, _late, _coded });
     }
 

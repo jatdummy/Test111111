@@ -6,14 +6,15 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(BoxCollider))]
 public class Elevator : MonoBehaviour
 {
-    private const string IdleText = "▼ 퇴근";
+    // 표시창 안내는 플레이어가 타고 내려갈 때만 띄움 (그 밖에는 비워 둬서 동료들의 인사 말풍선과 겹치지 않게)
     private const string RidingText = "▼ 내려가는 중…";
-
-    // 밤 동안 (06:00 전) 표시 — 엘리베이터는 퇴근 전용이라 잠겨 있음
-    private const string LockedText = "운행 중지";
+    private const string ArrivedText = "1층 도착";
 
     // 문이 닫혀 있는 시간(초)
     [SerializeField, Min(0f)] private float _closedSeconds = 1.5f;
+
+    // 도착 안내를 띄워 두는 시간(초)
+    [SerializeField, Min(0f)] private float _arrivedSeconds = 3f;
 
     // 닫혔을 때 보이는 문짝
     [SerializeField] private GameObject _doorPanel;
@@ -21,7 +22,7 @@ public class Elevator : MonoBehaviour
     // 퇴근 가능 여부를 묻고 퇴근을 알릴 루프 관리자
     [SerializeField] private LoopManager _loopManager;
 
-    // 엘리베이터 표시창 (퇴근 / 내려가는 중 / 운행 중지)
+    // 엘리베이터 표시창 (내려가는 중 / 도착, 그 밖에는 비어 있음)
     [SerializeField] private TextMesh _display;
 
     // 플레이어 (문 앞에 왔는지 확인용)
@@ -42,23 +43,20 @@ public class Elevator : MonoBehaviour
     // 문이 완전히 닫혔는지 (퇴근 연출에서 기다릴 때 사용)
     public bool IsDoorClosed => _door.IsClosed;
 
+    // 플레이어가 스위치를 눌러 내려가는 중인지 (퇴근 연출이 [E] 안내를 숨길 때 사용)
+    public bool IsRiding => _isRiding;
+
     private void Awake()
     {
         _door = _doorPanel.GetComponent<SlidingDoor>();
     }
 
-    private void Start() => SetDisplay(LockedText);
+    private void Start() => SetDisplay(string.Empty);
 
     private void Update()
     {
         TryRide();
         UpdateDoor();
-
-        // 타는 중이 아니면 퇴근 가능 여부에 맞춰 표시를 바꿈
-        if (!_isRiding)
-        {
-            SetDisplay(_loopManager.CanUseElevator ? IdleText : LockedText);
-        }
     }
 
     private void OnTriggerEnter(Collider other)
@@ -104,7 +102,7 @@ public class Elevator : MonoBehaviour
         {
             if (_rider == null)
             {
-                SetDisplay(IdleText);
+                SetDisplay(string.Empty);
                 _isRiding = false;
                 yield break;
             }
@@ -114,10 +112,17 @@ public class Elevator : MonoBehaviour
         yield return new WaitForSeconds(_closedSeconds);
 
         _loopManager.HandleTrigger(LoopTriggerType.Back, _rider);
-        SetDisplay(IdleText);
+        SetDisplay(ArrivedText);
 
         // 타는 중이 끝나면 UpdateDoor가 안에 있는 플레이어를 보고 문을 다시 엶
         _isRiding = false;
+
+        // 잠시 도착 안내를 보여 준 뒤 비움 (그사이 다시 탔으면 내려가는 중 안내를 그대로 둠)
+        yield return new WaitForSeconds(_arrivedSeconds);
+        if (!_isRiding)
+        {
+            SetDisplay(string.Empty);
+        }
     }
 
     // 탈 수 있을 때 문 앞에 오거나 안에 있으면 열리고, 그 밖에는 닫혀 있음
@@ -126,8 +131,8 @@ public class Elevator : MonoBehaviour
         if (_isRiding) return;
 
         bool isNear = Vector3.Distance(_player.position, _doorPanel.transform.position) <= _callDistance;
-        bool shouldOpen = !_isHeldClosed && (_isHeldOpen || _rider != null || (isNear && _loopManager.CanUseElevator));
-        if (shouldOpen)
+        bool isOpenNeeded = !_isHeldClosed && (_isHeldOpen || _rider != null || (isNear && _loopManager.CanUseElevator));
+        if (isOpenNeeded)
         {
             _door.Open();
         }

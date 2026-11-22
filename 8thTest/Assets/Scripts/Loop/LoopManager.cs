@@ -168,11 +168,13 @@ public class LoopManager : MonoBehaviour
         _hotfix.Cancel();
 
         // 원본 확인 구간은 판정 없이 검수 시작
+        // 원본은 이상현상이 없는 판이라 앞으로 가면 맞게 지나간 것으로 보고 1시간 진행 (22:00 원본, 23:00부터 판정)
         if (_currentBuild.IsOriginal)
         {
             if (isForward)
             {
                 _qaLog.AddLine(RichText.Colorize($"[{LoopTime.Format(0)}] 검수 시작", RichText.WaitingColor));
+                _count++;
             }
 
             ApplyBuild(isForward ? _generator.CreateJudged(_count) : OfficeBuild.CreateOriginal());
@@ -195,15 +197,19 @@ public class LoopManager : MonoBehaviour
         _count++;
         if (_count >= LoopTime.ClearCount)
         {
-            _isCleared = true;
-            ApplyBuild(OfficeBuild.CreateOriginal());
-
-            // 창으로 햇빛이 들고 동료들이 먼저 퇴근
-            _ending.BeginMorning();
+            Clear();
             return;
         }
 
         ApplyBuild(_generator.CreateJudged(_count));
+    }
+
+    // 06:00 도달: 창으로 햇빛이 들고 동료들이 먼저 퇴근
+    private void Clear()
+    {
+        _isCleared = true;
+        ApplyBuild(OfficeBuild.CreateOriginal());
+        _ending.BeginMorning();
     }
 
     // 클리어 뒤 퇴근하려 해도 다시 밤 10시
@@ -262,5 +268,30 @@ public class LoopManager : MonoBehaviour
         if (_currentBuild.CodedAnomaly != null) return $"버그 없음 : 코드에 적힌 [{_currentBuild.CodedAnomaly.Data.ReportLabel}]";
 
         return "버그 없음 : 정상 빌드";
+    }
+
+    // 개발용: Play 중 Inspector에서 컴포넌트를 우클릭해 바로 05:00 빌드로 (다음 판정을 맞히면 06:00으로 넘어가는 순간 확인)
+    // 시작선을 넘기 전(출근 직후 입구 구역)에 써야 이 빌드로 판정이 시작됨
+    [ContextMenu("바로 05:00 (마지막 판정)")]
+    private void SkipToLastHourForTest()
+    {
+        if (!Application.isPlaying || _isCleared) return;
+
+        _isArmed = false;
+        _hotfix.Cancel();
+        _count = LoopTime.ClearCount - 1;
+        ApplyBuild(_generator.CreateJudged(_count));
+    }
+
+    // 개발용: Play 중 Inspector에서 컴포넌트를 우클릭해 바로 06:00 퇴근 연출 확인 (7번 연속 정답을 기다리지 않게)
+    [ContextMenu("바로 06:00 퇴근")]
+    private void ClearForTest()
+    {
+        if (!Application.isPlaying || _isCleared) return;
+
+        _isArmed = false;
+        _hotfix.Cancel();
+        _count = LoopTime.ClearCount;
+        Clear();
     }
 }

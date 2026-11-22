@@ -8,8 +8,8 @@ public class CodeMonitor : MonoBehaviour
     private static readonly string[] RuleLines =
     {
         "1. 코드는 틀리지 않습니다. 틀리는 것은 사무실입니다.",
-        "2. 코드와 다르다면, 앞쪽의 계단을 내려가십시오.",
-        "3. 코드와 같다면, 뒤쪽의 계단을 올라가십시오.",
+        "2. 코드와 다르다면, 앞쪽의 계단을 올라가십시오.",
+        "3. 코드와 같다면, 뒤쪽의 계단을 내려가십시오.",
         "4. 코드는 긴급 수정될 수 있습니다. 1번을 기억하십시오.",
         "5. 버그 리포트는 컴퓨터에서. 세 번까지만.",
         "6. 06:00이 되면 퇴근하셔도 좋습니다.",
@@ -72,14 +72,15 @@ public class CodeMonitor : MonoBehaviour
         builder.AppendLine();
 
         // 바뀐 값이 없으면 원본과 같은 한 줄로 표시
+        // 빌드는 사무실 값을 바꾸는 메서드 하나로 보여 줌 (대입문은 메서드 안에서만 쓸 수 있으므로 class 대신 메서드 틀)
         bool hasOverride = build.LightOverride != LightOverride.None || build.IsCabinetOpen || build.CodedAnomaly != null || build.Hotfix != HotfixKind.None;
         if (build.IsOriginal || !hasOverride)
         {
-            builder.AppendLine($"class Office_{number:00} : BaseOffice {{ }}");
+            builder.AppendLine($"void ApplyBuild_{number:00}() {{ }}");
             return builder.ToString();
         }
 
-        builder.AppendLine($"class Office_{number:00} : BaseOffice");
+        builder.AppendLine($"void ApplyBuild_{number:00}()");
         builder.AppendLine("{");
         AppendOverrides(builder, build);
         builder.AppendLine("}");

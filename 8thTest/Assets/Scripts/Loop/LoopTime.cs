@@ -1,4 +1,4 @@
-// 근무 시간 규칙 (22:00 출근, 8시간 연속 정답이면 06:00 퇴근)
+// 근무 시간 규칙 (22:00 출근, 원본 확인 후 23:00 ~ 05:00 판정 7번 연속 정답이면 06:00 퇴근)
 public static class LoopTime
 {
     public const int ClearCount = 8;

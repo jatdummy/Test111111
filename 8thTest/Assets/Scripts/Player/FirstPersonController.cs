@@ -9,6 +9,10 @@ public class FirstPersonController : MonoBehaviour
     private const float MaxPitch = 80f;
     private const float GroundedVelocity = -1f;
 
+    // 연출이 시점 · 이동을 맡을 때 쓰는 거리 (이보다 가까우면 방향을 무시 / 도착으로 봄)
+    private const float MinLookDistance = 0.01f;
+    private const float ArriveDistance = 0.05f;
+
     [Header("이동")]
     // 걷기 속도(초당 거리)
     [SerializeField, Min(0f)] private float _walkSpeed = 2.2f;
@@ -49,13 +53,25 @@ public class FirstPersonController : MonoBehaviour
     // 일시정지 메뉴가 열린 동안 이동 · 시점 · 커서 처리를 멈춤
     public bool IsInputBlocked { get; set; }
 
+    // 퇴근 연출처럼 연출이 시점 · 이동을 맡는 동안 조작을 멈춤 (일시 정지가 풀려도 계속 멈춰 있게 따로 둠)
+    public bool IsDirected { get; set; }
+
+    // 설정 창에서 정한 마우스 감도 배율 (1이면 기본 감도)
+    public float LookSensitivityScale { get; set; } = 1f;
+
     private void Awake() => CacheComponents();
 
-    private void Start() => SetCursorLocked(true);
+    // 타이틀 화면이 입력을 막고 커서를 풀어 둔 동안에는 잠그지 않음
+    private void Start()
+    {
+        if (IsInputBlocked) return;
+
+        SetCursorLocked(true);
+    }
 
     private void Update()
     {
-        if (IsInputBlocked) return;
+        if (IsInputBlocked || IsDirected) return;
 
         UpdateCursorLock();
         Look();
@@ -78,6 +94,34 @@ public class FirstPersonController : MonoBehaviour
         _controller.enabled = true;
     }
 
+    // 연출용: 지점을 향해 시점을 조금씩 돌림 (좌우는 몸, 위아래는 카메라 축)
+    public void TurnViewTowards(Vector3 point, float degreesPerSecond)
+    {
+        Vector3 direction = point - _cameraPivot.position;
+        Vector3 flatDirection = new(direction.x, 0f, direction.z);
+        if (flatDirection.sqrMagnitude < MinLookDistance) return;
+
+        float step = degreesPerSecond * Time.deltaTime;
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(flatDirection), step);
+
+        // 위를 볼수록 각도가 음수 (마우스 시점과 같은 방향)
+        float targetPitch = Mathf.Clamp(-Mathf.Atan2(direction.y, flatDirection.magnitude) * Mathf.Rad2Deg, -MaxPitch, MaxPitch);
+        _pitch = Mathf.MoveTowards(_pitch, targetPitch, step);
+        _cameraPivot.localEulerAngles = new Vector3(_pitch, 0f, 0f);
+    }
+
+    // 연출용: 지점까지 한 프레임만큼 걸어감 (바닥에 붙어서), 도착했으면 true
+    public bool WalkTowards(Vector3 point, float speed)
+    {
+        Vector3 offset = point - transform.position;
+        offset.y = 0f;
+        if (offset.magnitude <= ArriveDistance) return true;
+
+        Vector3 step = Vector3.ClampMagnitude(offset, speed * Time.deltaTime);
+        _controller.Move(step + Vector3.up * (GroundedVelocity * Time.deltaTime));
+        return false;
+    }
+
     private void CacheComponents()
     {
         _controller = GetComponent<CharacterController>();
@@ -87,7 +131,7 @@ public class FirstPersonController : MonoBehaviour
     {
         if (Cursor.lockState != CursorLockMode.Locked) return;
 
-        Vector2 delta = _lookAction.action.ReadValue<Vector2>() * _lookSensitivity;
+        Vector2 delta = _lookAction.action.ReadValue<Vector2>() * (_lookSensitivity * LookSensitivityScale);
         transform.Rotate(0f, delta.x, 0f);
         _pitch = Mathf.Clamp(_pitch - delta.y, -MaxPitch, MaxPitch);
         _cameraPivot.localEulerAngles = new Vector3(_pitch, 0f, 0f);

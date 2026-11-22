@@ -41,5 +41,5 @@ public class OfficeBuildTests
     public void OriginalBuildNumberIsZero() => Assert.AreEqual(0, OfficeBuild.CreateOriginal().GetNumber(3));
 
     [Test]
-    public void JudgedBuildNumberIsHourPlusOne() => Assert.AreEqual(4, new OfficeBuild().GetNumber(3));
+    public void JudgedBuildNumberIsHoursPassed() => Assert.AreEqual(3, new OfficeBuild().GetNumber(3));
 }

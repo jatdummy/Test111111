@@ -8,7 +8,7 @@ public class ColleagueStareAnomaly : Anomaly
 
     public override void Apply(int hour) => _colleague.ResetWalk(true);
 
-    // 동료 걷기는 매 루프 LoopManager가 처음 상태로 되돌리므로 되돌릴 것이 없음
+    // 동료 걷기는 매 루프 OfficeState가 처음 상태로 되돌리므로 되돌릴 것이 없음
     public override void Revert()
     {
     }

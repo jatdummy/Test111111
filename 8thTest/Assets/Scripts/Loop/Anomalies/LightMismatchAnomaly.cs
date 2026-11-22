@@ -14,7 +14,7 @@ public class LightMismatchAnomaly : Anomaly
 
     public override void Apply(int hour) => _lights.Set(_lightIndex, _originalColor);
 
-    // 조명 색은 매 루프 LoopManager가 코드대로 다시 칠하므로 되돌릴 것이 없음
+    // 조명 색은 매 루프 OfficeState가 코드대로 다시 칠하므로 되돌릴 것이 없음
     public override void Revert()
     {
     }

@@ -101,6 +101,8 @@ public class QaLogTerminal : MonoBehaviour
     // 판정이 틀렸음을 알림 (다음 리포트를 받을 수 있게 됨)
     public void MarkFailure()
     {
+        // 방금 틀린 세션이 다음 리포트 (리포트 한 번에 버그 하나)
+        _log.EndFailedSession();
         _hasNewFailure = true;
         if (!_isBusy && !_isBroken)
         {
