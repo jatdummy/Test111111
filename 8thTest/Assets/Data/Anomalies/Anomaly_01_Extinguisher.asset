@@ -12,8 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34c5a3b9b1342fc41aa624e0b9a586dd, type: 3}
   m_Name: Anomaly_01_Extinguisher
   m_EditorClassIdentifier: 
-  _reportLabel: 소화기 위치
-  _blockedOverrides: []
+  _reportLabel: "\uC18C\uD654\uAE30 \uC704\uCE58"
+  _blockedOverrides: 
   _requiredLight: 0
   _canBeLegitimized: 0
   _legitimizeOverride: 0
+  _minHour: 0
+  _codeLine: override Extinguisher.Mount => Ceiling;

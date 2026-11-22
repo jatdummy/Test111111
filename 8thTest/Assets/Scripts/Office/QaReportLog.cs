@@ -35,26 +35,6 @@ public class QaReportLog
         _newCount = System.Math.Min(_newCount + 1, _lines.Count);
     }
 
-    // 태블릿에 보낼 리포트 (보낸 시각의 최근 판정 기록, 틀렸으면 이유가 붙어 있음)
-    public string Build(int recentCount)
-    {
-        var builder = new StringBuilder();
-        builder.AppendLine(ReportHeader);
-        builder.AppendLine();
-
-        int start = System.Math.Max(0, _lines.Count - recentCount);
-        for (int i = start; i < _lines.Count; i++)
-        {
-            builder.Append(_lines[i]);
-            if (i < _lines.Count - 1)
-            {
-                builder.AppendLine();
-            }
-        }
-
-        return builder.ToString();
-    }
-
     // 태블릿에 보낼 이번 회차 리포트 (지난 전송 뒤 새로 쌓인 기록만, 그중 최근 몇 줄)
     // 이미 받은 기록이 다음 리포트에 다시 섞이지 않게, 만든 뒤에는 새 기록 수를 비움
     public string BuildNew(int recentCount)

@@ -19,6 +19,19 @@ public class OfficeLights : MonoBehaviour
         }
     }
 
+    // 형광등 하나를 켜고 끔 (깜빡임 이상현상, 색은 그대로 두고 빛과 발광만 끔)
+    public void SetLit(int index, bool isLit)
+    {
+        Light light = _lights[index];
+        light.enabled = isLit;
+        foreach (Material material in _lampRenderers[index].materials)
+        {
+            if (!material.IsKeywordEnabled("_EMISSION")) continue;
+
+            material.SetColor("_EmissionColor", isLit ? light.color * EmissionIntensity : Color.black);
+        }
+    }
+
     public void Set(int index, Color color)
     {
         _lights[index].color = color;
@@ -27,7 +40,8 @@ public class OfficeLights : MonoBehaviour
             if (!material.IsKeywordEnabled("_EMISSION")) continue;
 
             material.SetColor("_BaseColor", color);
-            material.SetColor("_EmissionColor", color * EmissionIntensity);
+            // 깜빡임으로 꺼져 있는 순간에 색이 바뀌어도 발광은 꺼진 채로 둠 (다음에 켜질 때 새 색으로 켜짐)
+            material.SetColor("_EmissionColor", _lights[index].enabled ? color * EmissionIntensity : Color.black);
         }
     }
 }

@@ -39,11 +39,16 @@ public class OfficeState : MonoBehaviour
             build.Anomaly.Apply(hoursPassed);
         }
 
-        _colleague.gameObject.SetActive(!build.HasNoColleague);
+        // 코드에 적힌 이상현상 모습은 정상이므로 사무실에도 똑같이 보여 줌
+        if (build.CodedAnomaly != null)
+        {
+            build.CodedAnomaly.Apply(hoursPassed);
+        }
+
         ApplyPropOverrides(build);
     }
 
-    // 핫픽스 내용을 사무실에 바로 반영 (조명 색, 동료, 책장)
+    // 핫픽스 내용을 사무실에 바로 반영 (조명 색, 책장)
     public void ApplyHotfix(OfficeBuild build)
     {
         bool isAdded = build.Hotfix == HotfixKind.AddLine;
@@ -53,9 +58,6 @@ public class OfficeState : MonoBehaviour
             case OverrideKind.BlueLight:
                 LightOverride lightOverride = !isAdded ? LightOverride.None : build.HotfixTarget == OverrideKind.RedLight ? LightOverride.Red : LightOverride.Blue;
                 _lights.SetAll(GetLightColor(lightOverride));
-                break;
-            case OverrideKind.NoColleague:
-                _colleague.gameObject.SetActive(!isAdded);
                 break;
             default:
                 if (isAdded)
@@ -71,7 +73,7 @@ public class OfficeState : MonoBehaviour
         }
     }
 
-    // 통로에 들어오면 동료가 걷기 시작 (동료 없음 빌드면 그대로)
+    // 시작선을 넘으면 동료가 걷기 시작
     public void BeginColleagueWalk(Transform player)
     {
         if (_colleague.gameObject.activeSelf)

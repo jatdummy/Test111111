@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -277,44 +278,50 @@ public class EndingDirector : MonoBehaviour
     private class Leaver
     {
         // 동료 본체
-        public Transform Body;
+        [SerializeField, FormerlySerializedAs("Body")] private Transform _body;
 
         // 걷기 · 서기 · 타자 동작
-        public NpcBody Npc;
+        [SerializeField, FormerlySerializedAs("Npc")] private NpcBody _npc;
 
         // 출발 전 기다리는 시간(초)
-        public float StartDelay;
+        [SerializeField, Min(0f), FormerlySerializedAs("StartDelay")] private float _startDelay;
 
         // 엘리베이터 안까지 걷는 경로 (마지막 지점 직전에 인사)
-        public Vector3[] Path;
+        [SerializeField, FormerlySerializedAs("Path")] private Vector3[] _path;
 
         // 플레이어에게 건네는 인사
-        public string Greeting;
+        [SerializeField, FormerlySerializedAs("Greeting")] private string _greeting;
 
         private Vector3 _position;
         private Quaternion _rotation;
         private bool _isTyping;
 
+        public Transform Body => _body;
+        public NpcBody Npc => _npc;
+        public float StartDelay => _startDelay;
+        public Vector3[] Path => _path;
+        public string Greeting => _greeting;
+
         public void CachePose()
         {
-            _position = Body.position;
-            _rotation = Body.rotation;
-            _isTyping = Npc.IsTyping;
+            _position = _body.position;
+            _rotation = _body.rotation;
+            _isTyping = _npc.IsTyping;
         }
 
         // 다시 밤이 되면 원래 자리로
         public void RestorePose()
         {
             // 다시 켜면 Animator가 처음 상태로 돌아가므로, 켠 뒤에 자세를 다시 정함
-            Body.gameObject.SetActive(true);
-            Body.SetPositionAndRotation(_position, _rotation);
+            _body.gameObject.SetActive(true);
+            _body.SetPositionAndRotation(_position, _rotation);
             if (_isTyping)
             {
-                Npc.StartTyping();
+                _npc.StartTyping();
             }
             else
             {
-                Npc.StandUp();
+                _npc.StandUp();
             }
         }
     }

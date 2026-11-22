@@ -12,8 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34c5a3b9b1342fc41aa624e0b9a586dd, type: 3}
   m_Name: Anomaly_09_TrashOverflow
   m_EditorClassIdentifier: 
-  _reportLabel: 쓰레기통
-  _blockedOverrides: []
+  _reportLabel: "\uC4F0\uB808\uAE30\uD1B5"
+  _blockedOverrides: 
   _requiredLight: 0
   _canBeLegitimized: 0
   _legitimizeOverride: 0
+  _minHour: 0
+  _codeLine: override TrashPickup => false;

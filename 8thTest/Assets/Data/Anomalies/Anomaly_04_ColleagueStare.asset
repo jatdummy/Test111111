@@ -12,9 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34c5a3b9b1342fc41aa624e0b9a586dd, type: 3}
   m_Name: Anomaly_04_ColleagueStare
   m_EditorClassIdentifier: 
-  _reportLabel: 동료 시선
-  _blockedOverrides:
-  - 2
+  _reportLabel: "\uB3D9\uB8CC \uC2DC\uC120"
+  _blockedOverrides: 
   _requiredLight: 0
   _canBeLegitimized: 0
   _legitimizeOverride: 0

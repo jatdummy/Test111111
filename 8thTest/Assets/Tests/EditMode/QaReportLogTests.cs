@@ -6,15 +6,15 @@ public class QaReportLogTests
     private const string Header = "<color=#5FD07A>QA 어시스턴트 리포트</color>";
 
     [Test]
-    public void BuildStartsWithHeader()
+    public void BuildNewStartsWithHeader()
     {
         var log = new QaReportLog(10);
 
-        StringAssert.StartsWith(Header, log.Build(5));
+        StringAssert.StartsWith(Header, log.BuildNew(5));
     }
 
     [Test]
-    public void BuildKeepsOnlyRecentLines()
+    public void BuildNewKeepsOnlyRecentLines()
     {
         var log = new QaReportLog(10);
         for (int i = 1; i <= 5; i++)
@@ -22,7 +22,7 @@ public class QaReportLogTests
             log.Add($"line{i}");
         }
 
-        string report = log.Build(3);
+        string report = log.BuildNew(3);
 
         StringAssert.DoesNotContain("line2", report);
         StringAssert.Contains("line3", report);
@@ -39,16 +39,16 @@ public class QaReportLogTests
         }
 
         Assert.AreEqual(3, log.Count);
-        StringAssert.DoesNotContain("line2", log.Build(10));
+        StringAssert.DoesNotContain("line2", log.BuildNew(10));
     }
 
     [Test]
-    public void BuildWithFewerLinesThanRequestedHasAllLines()
+    public void BuildNewWithFewerLinesThanRequestedHasAllLines()
     {
         var log = new QaReportLog(10);
         log.Add("only");
 
-        StringAssert.EndsWith("only", log.Build(9));
+        StringAssert.EndsWith("only", log.BuildNew(9));
     }
 
     // 두 번째 리포트에는 첫 번째 리포트로 이미 받은 기록이 섞이지 않음

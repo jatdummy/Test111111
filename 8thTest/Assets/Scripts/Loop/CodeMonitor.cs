@@ -72,8 +72,7 @@ public class CodeMonitor : MonoBehaviour
         builder.AppendLine();
 
         // 바뀐 값이 없으면 원본과 같은 한 줄로 표시
-        bool hasOverride = build.LightOverride != LightOverride.None || build.HasNoColleague
-            || build.IsCabinetOpen || build.Hotfix != HotfixKind.None;
+        bool hasOverride = build.LightOverride != LightOverride.None || build.IsCabinetOpen || build.CodedAnomaly != null || build.Hotfix != HotfixKind.None;
         if (build.IsOriginal || !hasOverride)
         {
             builder.AppendLine($"class Office_{number:00} : BaseOffice {{ }}");
@@ -95,14 +94,15 @@ public class CodeMonitor : MonoBehaviour
             AppendOverrideLine(builder, build, build.LightOverride == LightOverride.Red ? OverrideKind.RedLight : OverrideKind.BlueLight);
         }
 
-        if (build.HasNoColleague)
-        {
-            AppendOverrideLine(builder, build, OverrideKind.NoColleague);
-        }
-
         if (build.IsCabinetOpen)
         {
             AppendOverrideLine(builder, build, OverrideKind.Bookcase);
+        }
+
+        // 코드로 적은 이상현상 모습 (이상현상 데이터의 코드 줄)
+        if (build.CodedAnomaly != null)
+        {
+            builder.AppendLine(RichText.Colorize($"<b>+   {build.CodedAnomaly.Data.CodeLine}</b>", RichText.AddedColor));
         }
 
         // 핫픽스로 새로 들어온 줄은 주황색

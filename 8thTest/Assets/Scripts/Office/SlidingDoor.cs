@@ -19,7 +19,7 @@ public class SlidingDoor : MonoBehaviour
 
     // 0이면 다 닫힘, 1이면 다 열림
     private float _progress;
-    private bool _wantsOpen;
+    private bool _isOpenRequested;
 
     public bool IsClosed => _progress <= 0f;
     public bool IsOpen => _progress >= 1f;
@@ -35,16 +35,16 @@ public class SlidingDoor : MonoBehaviour
 
     private void Update() => Slide();
 
-    public void Open() => _wantsOpen = true;
+    public void Open() => _isOpenRequested = true;
 
-    public void Close() => _wantsOpen = false;
+    public void Close() => _isOpenRequested = false;
 
     private void Slide()
     {
-        float target = _wantsOpen ? 1f : 0f;
+        float target = _isOpenRequested ? 1f : 0f;
         if (_progress == target) return;
 
-        float seconds = _wantsOpen ? _openSeconds : _closeSeconds;
+        float seconds = _isOpenRequested ? _openSeconds : _closeSeconds;
         _progress = Mathf.MoveTowards(_progress, target, Time.deltaTime / seconds);
 
         // 출발과 멈춤을 부드럽게 (처음과 끝이 느림)

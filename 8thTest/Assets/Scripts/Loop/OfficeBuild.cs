@@ -1,16 +1,18 @@
 // 한 루프의 빌드 명세
 public struct OfficeBuild
 {
-    public bool IsOriginal;
-    public LightOverride LightOverride;
-    public bool HasNoColleague;
-    public bool IsCabinetOpen;
-    public Anomaly Anomaly;
+    public bool IsOriginal { get; set; }
+    public LightOverride LightOverride { get; set; }
+    public bool IsCabinetOpen { get; set; }
+    public Anomaly Anomaly { get; set; }
+
+    // 코드에 적혀 있어 정상인 이상현상 모습 (미끼, 사무실도 같은 모습이 됨)
+    public Anomaly CodedAnomaly { get; set; }
 
     // 근무 중 배포된 긴급 핫픽스 (사무실은 그대로, 코드만 바뀜)
-    public HotfixKind Hotfix;
-    public OverrideKind HotfixTarget;
-    public bool IsHotfixApplied;
+    public HotfixKind Hotfix { get; set; }
+    public OverrideKind HotfixTarget { get; set; }
+    public bool IsHotfixApplied { get; set; }
 
     // 사무실이 코드와 다른지 (핫픽스가 있으면 바뀐 코드 기준)
     public bool HasBug

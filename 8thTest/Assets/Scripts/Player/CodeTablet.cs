@@ -55,7 +55,7 @@ public class CodeTablet : MonoBehaviour
     // 아직 안 본 알림 (새 코드 · 새 리포트 · 새 수칙)
     private readonly TabletNotice _unseen = new();
     private bool _isReportOffline;
-    private bool _wasRaised;
+    private bool _isRaisedLastFrame;
     private float _glitchTimer;
 
     // 지금 알림 제목에 반영된 상태 (바뀔 때만 제목을 다시 만듦, -1이면 아직 없음)
@@ -137,7 +137,7 @@ public class CodeTablet : MonoBehaviour
                 ShowPage(TabletPage.Code);
             }
 
-            _wasRaised = false;
+            _isRaisedLastFrame = false;
             UpdateNotice();
             return;
         }
@@ -145,12 +145,12 @@ public class CodeTablet : MonoBehaviour
         // 새 리포트가 와 있으면 드는 순간 리포트 페이지부터 (알림을 보고 Tab을 눌렀을 때)
         // 리포트가 없으면 코드 페이지를 보여 주며 코드 변경 알림을 끔
         // 아직 안 본 수칙이 있으면 수칙이 가장 먼저
-        if (!_wasRaised)
+        if (!_isRaisedLastFrame)
         {
             ShowPage(_unseen.Has(TabletPage.Rules) ? TabletPage.Rules : _unseen.Has(TabletPage.Report) ? TabletPage.Report : TabletPage.Code);
         }
 
-        _wasRaised = true;
+        _isRaisedLastFrame = true;
         UpdateNotice();
 
         if (_pages.TryReadInput(out TabletPage page))

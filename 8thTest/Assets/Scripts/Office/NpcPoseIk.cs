@@ -91,9 +91,7 @@ public class NpcPoseIk : MonoBehaviour
         }
     }
 
-    private void OnEnable() => _body.SatInstantly += SnapSeated;
-
-    private void OnDisable() => _body.SatInstantly -= SnapSeated;
+    private void OnEnable() => _body.OnSatInstantly += HandleSatInstantly;
 
     // Animator가 자세를 다 만든 뒤에 턱만 입 다문 회전으로 되돌림
     private void LateUpdate()
@@ -103,6 +101,8 @@ public class NpcPoseIk : MonoBehaviour
             _jaw.localRotation = _jawClosedRotation;
         }
     }
+
+    private void OnDisable() => _body.OnSatInstantly -= HandleSatInstantly;
 
     private void OnAnimatorIK(int layerIndex)
     {
@@ -115,7 +115,7 @@ public class NpcPoseIk : MonoBehaviour
     }
 
     // 앉는 과정 없이 바로 앉은 자세이므로 높이 보정도 바로 적용
-    private void SnapSeated() => _seated = 1f;
+    private void HandleSatInstantly() => _seated = 1f;
 
     // 앉는 동작 후반 · 손 올리는 중 · 타자 중엔 몸을 올림 (발은 애니메이션 위치에 고정해 바닥에서 뜨지 않게)
     private void UpdateSeatRaise(AnimatorStateInfo state)

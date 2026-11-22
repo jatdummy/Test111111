@@ -1,6 +1,6 @@
-    using UnityEngine;
+using UnityEngine;
 
-// 이상현상 하나의 정보 (리포트 이름, 코드 override와의 관계)
+// 이상현상 하나의 정보 (리포트 이름, 코드 override와의 관계, 나오는 시간, 코드로 적을 수 있는 줄)
 [CreateAssetMenu(fileName = "AnomalyData", menuName = "8번 테스터/Anomaly Data")]
 public class AnomalyData : ScriptableObject
 {
@@ -17,7 +17,17 @@ public class AnomalyData : ScriptableObject
     [SerializeField] private bool _canBeLegitimized;
     [SerializeField] private OverrideKind _legitimizeOverride;
 
+    // 이 시간부터 나옴 (22:00 기준 경과 시간, 섬뜩한 이상현상은 밤이 깊어진 뒤에 나오게)
+    [SerializeField, Min(0)] private int _minHour;
+
+    // 코드에 이 줄이 적혀 있으면 같은 모습이 정상 (비워 두면 코드로 적을 수 없는 이상현상)
+    // 다른 빌드에서 미끼로 코드에 적히고 사무실도 같은 모습이 되어, 코드를 읽어야 버그인지 알 수 있음
+    [SerializeField] private string _codeLine;
+
     public string ReportLabel => _reportLabel;
+    public int MinHour => _minHour;
+    public string CodeLine => _codeLine;
+    public bool HasCodeLine => !string.IsNullOrEmpty(_codeLine);
     public LightOverride RequiredLight => _requiredLight;
     public bool CanBeLegitimized => _canBeLegitimized;
     public OverrideKind LegitimizeOverride => _legitimizeOverride;

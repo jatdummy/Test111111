@@ -12,8 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34c5a3b9b1342fc41aa624e0b9a586dd, type: 3}
   m_Name: Anomaly_03_MissingTexture
   m_EditorClassIdentifier: 
-  _reportLabel: 포스터 B 텍스처
-  _blockedOverrides: []
+  _reportLabel: "\uD3EC\uC2A4\uD130 B \uD14D\uC2A4\uCC98"
+  _blockedOverrides: 
   _requiredLight: 0
   _canBeLegitimized: 0
   _legitimizeOverride: 0
+  _minHour: 0
+  _codeLine: override PosterB.Texture => null;

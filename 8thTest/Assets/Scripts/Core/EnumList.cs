@@ -6,6 +6,7 @@ public enum LoopTriggerType
     Forward = 2,
     Back = 3,
     Rollback = 4,
+    Hotfix = 5,      // 자판기를 지나면 예약된 긴급 핫픽스 배포
 }
 
 // 코드에 적히는 조명 색 변경
@@ -25,12 +26,11 @@ public enum HotfixKind
     Legitimize = 3,  // 이상현상을 코드에 반영 → 정상
 }
 
-// override 종류 번호 (AddRandomOverride의 순서와 같음)
+// override 종류 번호 (이상현상 데이터에 숫자로 저장되므로 번호를 바꾸지 않음, 2번은 지운 '동료 없음' 자리)
 public enum OverrideKind
 {
     RedLight = 0,
     BlueLight = 1,
-    NoColleague = 2,
     Bookcase = 3,
 }
 

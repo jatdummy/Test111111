@@ -7,9 +7,9 @@ public class TestAnomalyFactory
 {
     private readonly List<Object> _created = new();
 
-    public Anomaly Create(string label, OverrideKind[] blockedOverrides = null, LightOverride requiredLight = LightOverride.None, bool canBeLegitimized = false, OverrideKind legitimizeOverride = OverrideKind.RedLight)
+    public Anomaly Create(string label, OverrideKind[] blockedOverrides = null, LightOverride requiredLight = LightOverride.None, bool canBeLegitimized = false, OverrideKind legitimizeOverride = OverrideKind.RedLight, int minHour = 0, string codeLine = "")
     {
-        var data = ScriptableObject.CreateInstance<AnomalyData>();
+        AnomalyData data = ScriptableObject.CreateInstance<AnomalyData>();
         _created.Add(data);
 
         // 데이터 칸은 private이라 에디터의 SerializedObject로 채움 (게임 코드에 테스트용 setter를 만들지 않게)
@@ -26,12 +26,14 @@ public class TestAnomalyFactory
         serializedData.FindProperty("_requiredLight").intValue = (int)requiredLight;
         serializedData.FindProperty("_canBeLegitimized").boolValue = canBeLegitimized;
         serializedData.FindProperty("_legitimizeOverride").intValue = (int)legitimizeOverride;
+        serializedData.FindProperty("_minHour").intValue = minHour;
+        serializedData.FindProperty("_codeLine").stringValue = codeLine;
         serializedData.ApplyModifiedPropertiesWithoutUndo();
 
         var gameObject = new GameObject($"TestAnomaly_{label}");
         _created.Add(gameObject);
         // 에디터 전용 테스트 어셈블리의 컴포넌트는 오브젝트에 붙일 수 없어서, 게임 코드의 가장 단순한 이상현상을 씀 (출제 규칙만 확인하므로 동작은 쓰지 않음)
-        var anomaly = gameObject.AddComponent<ActivateObjectAnomaly>();
+        ActivateObjectAnomaly anomaly = gameObject.AddComponent<ActivateObjectAnomaly>();
         var serializedAnomaly = new SerializedObject(anomaly);
         serializedAnomaly.FindProperty("_data").objectReferenceValue = data;
         serializedAnomaly.ApplyModifiedPropertiesWithoutUndo();

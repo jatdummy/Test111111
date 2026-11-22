@@ -57,7 +57,7 @@ public class LoopManager : MonoBehaviour
 
     private void OnDisable() => _hotfix.OnHotfixDeployed -= HandleHotfixDeployed;
 
-    // 트리거 통과 처리 (사무실 진입, 앞으로, 뒤로)
+    // 트리거 통과 처리 (사무실 진입, 자판기 통과, 앞으로, 뒤로)
     public void HandleTrigger(LoopTriggerType type, FirstPersonController player)
     {
         // 06:00 이후에는 엘리베이터(퇴근)만 받음, 동료들이 먼저 내려간 뒤에만 탈 수 있음
@@ -86,6 +86,14 @@ public class LoopManager : MonoBehaviour
         {
             case LoopTriggerType.CorridorEnter:
                 EnterCorridor(player);
+                break;
+            case LoopTriggerType.Hotfix:
+                // 판정 대기 중에 자판기를 지나면 예약된 긴급 핫픽스 배포
+                if (_isArmed)
+                {
+                    _hotfix.DeployIfPending();
+                }
+
                 break;
             case LoopTriggerType.Forward:
                 if (!_isArmed) return;
@@ -167,7 +175,7 @@ public class LoopManager : MonoBehaviour
                 _qaLog.AddLine(RichText.Colorize($"[{LoopTime.Format(0)}] 검수 시작", RichText.WaitingColor));
             }
 
-            ApplyBuild(isForward ? _generator.CreateJudged() : OfficeBuild.CreateOriginal());
+            ApplyBuild(isForward ? _generator.CreateJudged(_count) : OfficeBuild.CreateOriginal());
             return;
         }
 
@@ -195,7 +203,7 @@ public class LoopManager : MonoBehaviour
             return;
         }
 
-        ApplyBuild(_generator.CreateJudged());
+        ApplyBuild(_generator.CreateJudged(_count));
     }
 
     // 클리어 뒤 퇴근하려 해도 다시 밤 10시
@@ -251,6 +259,7 @@ public class LoopManager : MonoBehaviour
     {
         if (_currentBuild.Hotfix == HotfixKind.Legitimize) return $"버그 없음 : 핫픽스로 코드에 반영된 [{OverrideText.GetLabel(_currentBuild.HotfixTarget)}]";
         if (_currentBuild.IsHotfixApplied) return $"버그 없음 : 사무실에도 반영된 핫픽스 [{OverrideText.GetLabel(_currentBuild.HotfixTarget)}]";
+        if (_currentBuild.CodedAnomaly != null) return $"버그 없음 : 코드에 적힌 [{_currentBuild.CodedAnomaly.Data.ReportLabel}]";
 
         return "버그 없음 : 정상 빌드";
     }

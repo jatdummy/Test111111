@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 // NPC 몸 동작 (Animator 파라미터로 걷기 · 앉아서 타자 · 서기를 바꾸고, 걸을 때는 폰을 듦)
 // 위치와 몸 방향은 부르는 쪽(ColleagueWalker, EndingDirector)이 정함, 꺼진 동안 받은 명령은 무시함 (다시 켜면 처음 상태)
@@ -8,15 +9,12 @@ using UnityEngine;
 public class NpcBody : MonoBehaviour
 {
     // 씬이 시작되자마자 자리에서 타자 (처음부터 앉아 있는 NPC)
-    [SerializeField] private bool _startsTyping;
+    [SerializeField, FormerlySerializedAs("_startsTyping")] private bool _isTypingOnStart;
 
     // 걸을 때만 손에 드는 휴대폰 (폰 보며 걷기 동작용, 없으면 비워 둠)
     [SerializeField] private GameObject _handPhone;
 
     private Animator _animator;
-
-    // 앉는 과정 없이 바로 앉은 자세가 됨 (자세 보정이 서서히가 아니라 바로 맞추게)
-    public event Action SatInstantly;
 
     // 고개를 돌릴 대상 (null이면 정면)
     public Transform LookTarget { get; private set; }
@@ -35,6 +33,9 @@ public class NpcBody : MonoBehaviour
 
     private int CurrentState => _animator.GetCurrentAnimatorStateInfo(0).shortNameHash;
 
+    // 앉는 과정 없이 바로 앉은 자세가 됨 (자세 보정이 서서히가 아니라 바로 맞추게)
+    public event Action OnSatInstantly;
+
     private void Awake()
     {
         _animator = GetComponent<Animator>();
@@ -43,7 +44,7 @@ public class NpcBody : MonoBehaviour
 
     private void Start()
     {
-        if (_startsTyping)
+        if (_isTypingOnStart)
         {
             StartTyping();
         }
@@ -89,7 +90,7 @@ public class NpcBody : MonoBehaviour
         _animator.SetBool(NpcAnimatorStates.IsWalking, false);
         _animator.SetTrigger(NpcAnimatorStates.Type);
         ShowPhone(false);
-        SatInstantly?.Invoke();
+        OnSatInstantly?.Invoke();
     }
 
     // 어떤 상태에서든 선 자세로 (엔딩 출발, 루프 처음으로 되돌릴 때)

@@ -12,9 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34c5a3b9b1342fc41aa624e0b9a586dd, type: 3}
   m_Name: Anomaly_08_CabinetDoorOpen
   m_EditorClassIdentifier: 
-  _reportLabel: 책장 문
-  _blockedOverrides:
-  - 3
+  _reportLabel: "\uCC45\uC7A5 \uBB38"
+  _blockedOverrides: 03000000
   _requiredLight: 0
-  _canBeLegitimized: 1
+  _canBeLegitimized: 0
   _legitimizeOverride: 3

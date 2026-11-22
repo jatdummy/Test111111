@@ -12,8 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34c5a3b9b1342fc41aa624e0b9a586dd, type: 3}
   m_Name: Anomaly_05_EyesInDoor
   m_EditorClassIdentifier: 
-  _reportLabel: 회의실 문 틈
-  _blockedOverrides: []
+  _reportLabel: "\uD68C\uC758\uC2E4 \uBB38 \uD2C8"
+  _blockedOverrides: 
   _requiredLight: 0
   _canBeLegitimized: 0
   _legitimizeOverride: 0
+  _minHour: 2
+  _codeLine: 
