@@ -205,6 +205,7 @@ public class EndingDirector : MonoBehaviour
 
         // 사무실에 들어서면 조작을 멈추고, 사무실이 넓게 보이는 자리까지 걸어 나옴
         _playerController.IsDirected = true;
+        _tablet.SetLocked(true);
         yield return PlayerWalkRoutine(_viewPoint);
 
         // 플레이어가 오면 동료들이 뒤돌아 플레이어를 봄 (인사는 각자 엘리베이터를 타기 직전에, 코드판 글자와 겹치지 않게)
@@ -246,6 +247,7 @@ public class EndingDirector : MonoBehaviour
 
         // 엘리베이터에 타면 조작을 돌려줌 (스위치를 직접 누르고, 문이 다시 열리면 밤 사무실을 둘러볼 수 있게)
         _playerController.IsDirected = false;
+        _tablet.SetLocked(false);
         CanLeave = true;
         _ridePrompt.SetActive(true);
 

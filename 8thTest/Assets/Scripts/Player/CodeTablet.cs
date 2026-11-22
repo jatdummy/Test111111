@@ -68,6 +68,9 @@ public class CodeTablet : MonoBehaviour
     // 조금이라도 들려 있으면 태블릿을 보는 중
     public bool IsRaised => _progress > 0f;
 
+    // 연출이 시점을 맡는 동안 Tab으로 들지 못하게 잠금 (퇴근 연출 화면을 가리지 않게)
+    public bool IsLocked { get; private set; }
+
     private void Start()
     {
         _reportText.text = NoReportText;
@@ -78,7 +81,7 @@ public class CodeTablet : MonoBehaviour
     private void Update()
     {
         // 누르고 있는 동안이 아니라, 누를 때마다 들고 내림
-        if (_viewAction.action.WasPressedThisFrame())
+        if (!IsLocked && _viewAction.action.WasPressedThisFrame())
         {
             _isOpen = !_isOpen;
         }
@@ -92,6 +95,16 @@ public class CodeTablet : MonoBehaviour
 
     // 연출 중에는 태블릿을 내림 (엔딩 시작, 밤으로 돌아갈 때)
     public void Close() => _isOpen = false;
+
+    // 잠그면 들고 있던 태블릿도 내림
+    public void SetLocked(bool isLocked)
+    {
+        IsLocked = isLocked;
+        if (isLocked)
+        {
+            Close();
+        }
+    }
 
     // 검수 로그 단말에서 보낸 기록을 받음 (안 읽었으면 페이지 표시에 점이 붙음)
     public void ReceiveReport(string report)
