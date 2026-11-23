@@ -19,6 +19,7 @@ public class TerminalScreen : MonoBehaviour
     // 리포트 준비됨 글자가 가장 어두울 때의 투명도
     private const float ReadyMinAlpha = 0.35f;
     private const float CursorBlinkSeconds = 0.5f;
+    private const string CursorText = "<color=#5FD07A>_</color>";
     private const int DotCount = 3;
 
     // 전송 중 글자 (점 1~3개, 미리 만들어 두고 돌려 씀)
@@ -62,6 +63,9 @@ public class TerminalScreen : MonoBehaviour
     // 지금 화면에 넣어 둔 대기 / 준비 글자 (같으면 다시 넣지 않음)
     private string _shownTitle;
 
+    // 지금 화면에 넣어 둔 커서 글자 (깜빡임이 바뀔 때만 다시 넣음)
+    private string _shownCursor;
+
     // 플레이어가 화면을 보고 있는지 잴 때 쓰는 화면 가운데
     public Vector3 Center => _screen.bounds.center;
 
@@ -84,7 +88,13 @@ public class TerminalScreen : MonoBehaviour
     public void Animate(bool hasReport, bool isBusy)
     {
         bool isCursorOn = Time.time % (CursorBlinkSeconds * 2f) < CursorBlinkSeconds;
-        _cursorText.text = isCursorOn ? "<color=#5FD07A>_</color>" : string.Empty;
+        string cursor = isCursorOn ? CursorText : string.Empty;
+        if (cursor != _shownCursor)
+        {
+            _shownCursor = cursor;
+            _cursorText.text = cursor;
+        }
+
         if (isBusy)
         {
             // 전송 · 고장 글자는 각자 색 태그를 씀, 끝나면 대기 / 준비 글자를 다시 넣게 비워 둠

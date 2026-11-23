@@ -15,5 +15,7 @@ MonoBehaviour:
   _reportLabel: "\uCC45\uC7A5 \uBB38"
   _blockedOverrides: 03000000
   _requiredLight: 0
-  _canBeLegitimized: 0
+  _canBeLegitimized: 1
   _legitimizeOverride: 3
+  _minHour: 0
+  _codeLine: 

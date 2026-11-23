@@ -14,12 +14,6 @@ public class EndingDirector : MonoBehaviour
     // 말풍선 끝과 벽 사이에 남길 여유(m)
     private const float SpeechWallMargin = 0.1f;
 
-    // 사무실 안으로 보는 경계 (이 높이보다 위, 이 z보다 안쪽, 이 x보다 앞쪽)
-    // x 경계가 없으면 사무실 끝 너머 승인 계단실 꼭대기도 사무실로 잘못 봄
-    private const float OfficeFloorMinY = -0.5f;
-    private const float OfficeMinZ = -3.4f;
-    private const float OfficeMaxX = 35f;
-
     [Header("창문")]
     // 창 밖 배경판
     [SerializeField] private Renderer[] _windowOutsides;
@@ -71,6 +65,12 @@ public class EndingDirector : MonoBehaviour
     [SerializeField, Min(0f)] private float _doorClosedSeconds = 2f;
 
     [Header("플레이어 연출")]
+    // 사무실 안으로 보는 경계 (월드 기준, 이 높이보다 위, 이 z보다 안쪽, 이 x보다 앞쪽)
+    // x 경계가 없으면 사무실 끝 너머 승인 계단실 꼭대기도 사무실로 잘못 봄
+    [SerializeField] private float _officeFloorMinY = -0.5f;
+    [SerializeField] private float _officeMinZ = -3.4f;
+    [SerializeField] private float _officeMaxX = 35f;
+
     // 사무실에 들어선 뒤 걸어 나올 자리 (사무실 전체와 코드판 앞 동료들이 넓게 보이는 곳)
     [SerializeField] private Vector3 _viewPoint;
 
@@ -323,7 +323,7 @@ public class EndingDirector : MonoBehaviour
     }
 
     // 계단(바닥 아래, 승인 계단실)이 아니라 사무실 바닥에 올라와 있으면 사무실 안
-    private bool IsPlayerInOffice() => _player.position.y > OfficeFloorMinY && _player.position.z > OfficeMinZ && _player.position.x < OfficeMaxX;
+    private bool IsPlayerInOffice() => _player.position.y > _officeFloorMinY && _player.position.z > _officeMinZ && _player.position.x < _officeMaxX;
 
     private IEnumerator LeaveRoutine(Leaver leaver, int order, System.Action onArrived)
     {

@@ -57,7 +57,7 @@ public class LoopManager : MonoBehaviour
 
     private void OnDisable() => _hotfix.OnHotfixDeployed -= HandleHotfixDeployed;
 
-    // 트리거 통과 처리 (사무실 진입, 자판기 통과, 앞으로, 뒤로)
+    // 트리거 통과 처리 (사무실 진입, 자판기 통과, 승인 계단, 롤백 계단, 06:00 이후 엘리베이터)
     public void HandleTrigger(LoopTriggerType type, FirstPersonController player)
     {
         // 06:00 이후에는 엘리베이터(퇴근)만 받음, 동료들이 먼저 내려간 뒤에만 탈 수 있음
@@ -99,10 +99,6 @@ public class LoopManager : MonoBehaviour
                 if (!_isArmed) return;
                 Judge(true);
                 TeleportForward(player);
-                break;
-            case LoopTriggerType.Back:
-                if (!_isArmed) return;
-                Judge(false);
                 break;
             case LoopTriggerType.Rollback:
                 // 판정 대기 중일 때만 판정하고, 이동은 항상 함 (계단 끝 가짜 문 앞에 갇히지 않게)
