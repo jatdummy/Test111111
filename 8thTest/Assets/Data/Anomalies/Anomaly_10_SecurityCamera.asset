@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 34c5a3b9b1342fc41aa624e0b9a586dd, type: 3}
-  m_Name: Anomaly_21_ExtinguisherSign
+  m_Name: Anomaly_10_SecurityCamera
   m_EditorClassIdentifier: 
-  _reportLabel: 소화기 표지판
-  _blockedOverrides: []
+  _reportLabel: "\uAC10\uC2DC\uCE74\uBA54\uB77C \uBC29\uD5A5"
+  _blockedOverrides: 
   _requiredLight: 0
   _canBeLegitimized: 0
   _legitimizeOverride: 0
-  _minHour: 5
-  _codeLine: 
+  _minHour: 0
+  _codeLine: SecurityCamera.Mode = CameraMode.Tracking;

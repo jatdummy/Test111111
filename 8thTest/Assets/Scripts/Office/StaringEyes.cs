@@ -19,22 +19,33 @@ public class StaringEyes : MonoBehaviour
     [SerializeField, Min(0f)] private float _blinkSeconds = 0.12f;
 
     private Vector3[] _openScales;
-    private float _nextBlinkTime;
+    // 눈알마다 다음 깜빡임 시각 (따로 깜빡여야 눈 하나하나가 살아 있는 것처럼 보임)
+    private float[] _nextBlinkTimes;
 
-    private void Awake() => CacheScales();
+    private void Awake()
+    {
+        CacheScales();
+        _nextBlinkTimes = new float[_eyeballs.Length];
+    }
 
-    private void OnEnable() => ScheduleBlink();
+    private void OnEnable()
+    {
+        for (int i = 0; i < _eyeballs.Length; i++)
+        {
+            ScheduleBlink(i);
+        }
+    }
 
     private void LateUpdate()
     {
-        bool isClosed = Time.time >= _nextBlinkTime;
-        if (Time.time >= _nextBlinkTime + _blinkSeconds)
-        {
-            ScheduleBlink();
-        }
-
         for (int i = 0; i < _eyeballs.Length; i++)
         {
+            bool isClosed = Time.time >= _nextBlinkTimes[i];
+            if (Time.time >= _nextBlinkTimes[i] + _blinkSeconds)
+            {
+                ScheduleBlink(i);
+            }
+
             _eyeballs[i].LookAt(_target);
             _eyeballs[i].localScale = isClosed ? Vector3.Scale(_openScales[i], new Vector3(1f, ClosedScale, 1f)) : _openScales[i];
         }
@@ -49,5 +60,5 @@ public class StaringEyes : MonoBehaviour
         }
     }
 
-    private void ScheduleBlink() => _nextBlinkTime = Time.time + Random.Range(_blinkInterval.x, _blinkInterval.y);
+    private void ScheduleBlink(int index) => _nextBlinkTimes[index] = Time.time + Random.Range(_blinkInterval.x, _blinkInterval.y);
 }

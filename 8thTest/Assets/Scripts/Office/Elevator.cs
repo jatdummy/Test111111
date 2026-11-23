@@ -8,7 +8,7 @@ public class Elevator : MonoBehaviour
 {
     // 표시창 안내는 플레이어가 타고 내려갈 때만 띄움 (그 밖에는 비워 둬서 동료들의 인사 말풍선과 겹치지 않게)
     private const string RidingText = "▼ 내려가는 중…";
-    private const string ArrivedText = "1층 도착";
+    private const string ArrivedText = "8층 도착";
 
     // 문이 닫혀 있는 시간(초)
     [SerializeField, Min(0f)] private float _closedSeconds = 1.5f;
@@ -45,6 +45,9 @@ public class Elevator : MonoBehaviour
 
     // 플레이어가 스위치를 눌러 내려가는 중인지 (퇴근 연출이 [E] 안내를 숨길 때 사용)
     public bool IsRiding => _isRiding;
+
+    // 플레이어가 엘리베이터 안에 있는지 (퇴근 연출이 [E] 안내를 엘리베이터 안에서만 보일 때 사용)
+    public bool HasRider => _rider != null;
 
     private void Awake()
     {

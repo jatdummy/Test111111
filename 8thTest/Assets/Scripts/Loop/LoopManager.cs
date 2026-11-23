@@ -190,6 +190,7 @@ public class LoopManager : MonoBehaviour
         if (!isCorrect)
         {
             _count = 0;
+            _generator.ResetShift();
             ApplyBuild(OfficeBuild.CreateOriginal());
             return;
         }
@@ -219,6 +220,7 @@ public class LoopManager : MonoBehaviour
         _hotfix.Cancel();
         _isCleared = false;
         _count = 0;
+        _generator.ResetShift();
         ApplyBuild(OfficeBuild.CreateOriginal());
 
         // 엘리베이터 문이 열리면 밤 사무실, 잠시 뒤 타이틀로

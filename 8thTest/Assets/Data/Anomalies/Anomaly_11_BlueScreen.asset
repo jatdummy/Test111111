@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 34c5a3b9b1342fc41aa624e0b9a586dd, type: 3}
-  m_Name: Anomaly_13_PosterEyes
+  m_Name: Anomaly_11_BlueScreen
   m_EditorClassIdentifier: 
-  _reportLabel: "\uD3EC\uC2A4\uD130 C \uB208\uC54C"
-  _blockedOverrides: 
+  _reportLabel: 08번 모니터
+  _blockedOverrides: []
   _requiredLight: 0
   _canBeLegitimized: 0
   _legitimizeOverride: 0
-  _minHour: 2
-  _codeLine: 
+  _minHour: 0
+  _codeLine: 'Monitor_QA08.IsBlueScreen = true;'

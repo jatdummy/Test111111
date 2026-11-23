@@ -8,7 +8,7 @@ public class BuildGenerator
     private const int MaxNormalStreak = 2;
     private const int MaxBugStreak = 4;
     private const float NormalBuildChance = 1f / 3f;
-    private const float OverrideChance = 0.5f;
+    private const float OverrideChance = 2f / 3f;
     // 미끼 override 종류 (빨간 조명, 파란 조명, 책장 열림)
     private static readonly OverrideKind[] DecoyKinds = { OverrideKind.RedLight, OverrideKind.BlueLight, OverrideKind.Bookcase };
     // 미끼가 코드로 적은 이상현상 모습일 확률 (나머지는 조명 · 책장, 후보 수에 상관없이 반반이 되게)
@@ -20,6 +20,8 @@ public class BuildGenerator
     private readonly List<Anomaly> _codedCandidates = new();
     private readonly List<OverrideKind> _allowedKinds = new();
     private Anomaly _lastAnomaly;
+    // 이번 근무(22:00 ~ 06:00)에 이미 나온 이상현상 (한 근무 안에서 같은 이상현상이 다시 나오지 않게)
+    private readonly HashSet<Anomaly> _usedThisShift = new();
     private int _normalStreak;
     private int _bugStreak;
 
@@ -61,6 +63,9 @@ public class BuildGenerator
         return build;
     }
 
+    // 새 근무 시작 (오답으로 22:00 초기화, 퇴근 뒤 다시 밤): 이번 근무에 나온 이상현상 기록을 비움
+    public void ResetShift() => _usedThisShift.Clear();
+
     private bool ShouldBeNormal()
     {
         if (_normalStreak >= MaxNormalStreak) return false;
@@ -73,6 +78,13 @@ public class BuildGenerator
     private Anomaly PickAnomaly(int hoursPassed)
     {
         FillCandidates(hoursPassed, true);
+
+        // 이번 근무에 나올 수 있는 것을 다 썼으면 기록을 비우고 다시 고름 (직전 것은 계속 제외)
+        if (_candidates.Count == 0 && _usedThisShift.Count > 0)
+        {
+            _usedThisShift.Clear();
+            FillCandidates(hoursPassed, true);
+        }
 
         // 고를 것이 없으면 (나올 수 있는 이상현상이 직전 것 하나뿐) 직전 것도 허용
         if (_candidates.Count == 0)
@@ -88,6 +100,7 @@ public class BuildGenerator
 
         Anomaly anomaly = _candidates[Random.Range(0, _candidates.Count)];
         _lastAnomaly = anomaly;
+        _usedThisShift.Add(anomaly);
         return anomaly;
     }
 
@@ -98,6 +111,7 @@ public class BuildGenerator
         {
             if (anomaly.Data.MinHour > hoursPassed) continue;
             if (isLastExcluded && anomaly == _lastAnomaly) continue;
+            if (isLastExcluded && _usedThisShift.Contains(anomaly)) continue;
 
             _candidates.Add(anomaly);
         }

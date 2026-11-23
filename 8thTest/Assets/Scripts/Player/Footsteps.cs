@@ -14,6 +14,9 @@ public class Footsteps : MonoBehaviour
     // 바닥에서 잠깐 떠도 디딘 것으로 보는 시간(초, 계단을 내려갈 때 칸마다 잠깐 뜸)
     private const float GroundedGraceSeconds = 0.2f;
 
+    // Cylinder 원판의 자기 좌표 기준 반지름의 제곱 (지름 1)
+    private const float PuddleRadiusSqr = 0.25f;
+
     // 움직임 속도와 발 위치를 읽을 플레이어
     [SerializeField] private CharacterController _controller;
 
@@ -26,11 +29,20 @@ public class Footsteps : MonoBehaviour
     // 계단을 오르내리는 발소리
     [SerializeField] private AudioClip _stairStep;
 
+    // 물 웅덩이를 밟는 발소리
+    [SerializeField] private AudioClip _waterStep;
+
+    // 밟으면 물 발소리가 나는 웅덩이 (Cylinder 원판, 꺼져 있으면 무시)
+    [SerializeField] private Transform[] _puddles;
+
     // 평소 발소리 크기
     [SerializeField, Range(0f, 1f)] private float _floorVolume = 0.35f;
 
     // 계단 발소리 크기
     [SerializeField, Range(0f, 1f)] private float _stairVolume = 0.45f;
+
+    // 물 발소리 크기
+    [SerializeField, Range(0f, 1f)] private float _waterVolume = 0.5f;
 
     // 이동 거리 1m당 흔들림 횟수 (헤드밥과 같은 값, 한 번 흔들릴 때 두 걸음)
     [SerializeField, Min(0.01f)] private float _stepsPerMeter = 0.42f;
@@ -79,10 +91,23 @@ public class Footsteps : MonoBehaviour
 
     private void PlayStep()
     {
-        bool isOnStairs = IsOnStairs();
-        float volume = (isOnStairs ? _stairVolume : _floorVolume) * (1f - Random.Range(0f, _volumeJitter));
+        // 계단 > 물 웅덩이 > 평소 순서로 발소리를 고름
+        AudioClip clip = _floorStep;
+        float baseVolume = _floorVolume;
+        if (IsOnStairs())
+        {
+            clip = _stairStep;
+            baseVolume = _stairVolume;
+        }
+        else if (IsOnPuddle())
+        {
+            clip = _waterStep;
+            baseVolume = _waterVolume;
+        }
+
+        float volume = baseVolume * (1f - Random.Range(0f, _volumeJitter));
         _audio.pitch = 1f + Random.Range(-_pitchJitter, _pitchJitter);
-        _audio.PlayOneShot(isOnStairs ? _stairStep : _floorStep, volume);
+        _audio.PlayOneShot(clip, volume);
     }
 
     // 발밑 바닥이 계단실에 속하는지
@@ -93,5 +118,20 @@ public class Footsteps : MonoBehaviour
         if (!Physics.Raycast(center, Vector3.down, out RaycastHit hit, length, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)) return false;
 
         return hit.collider.transform.IsChildOf(_stairwells);
+    }
+
+    // 발밑이 켜져 있는 물 웅덩이 원판 안인지 (웅덩이는 커지는 중이므로 매번 지금 크기로 계산)
+    private bool IsOnPuddle()
+    {
+        Vector3 foot = _controller.transform.TransformPoint(_controller.center + Vector3.down * (_controller.height * 0.5f));
+        foreach (Transform puddle in _puddles)
+        {
+            if (!puddle.gameObject.activeInHierarchy) continue;
+
+            Vector3 local = puddle.InverseTransformPoint(foot);
+            if (local.x * local.x + local.z * local.z <= PuddleRadiusSqr) return true;
+        }
+
+        return false;
     }
 }

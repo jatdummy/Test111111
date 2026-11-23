@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 34c5a3b9b1342fc41aa624e0b9a586dd, type: 3}
-  m_Name: Anomaly_17_CeilingBlood
+  m_Name: Anomaly_19_ExtinguisherSign
   m_EditorClassIdentifier: 
-  _reportLabel: 천장 얼룩
-  _blockedOverrides: []
+  _reportLabel: "\uC18C\uD654\uAE30 \uD45C\uC9C0\uD310"
+  _blockedOverrides: 
   _requiredLight: 0
   _canBeLegitimized: 0
   _legitimizeOverride: 0
-  _minHour: 4
+  _minHour: 0
   _codeLine: 

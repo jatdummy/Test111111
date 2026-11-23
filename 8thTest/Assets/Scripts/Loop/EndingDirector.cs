@@ -249,11 +249,14 @@ public class EndingDirector : MonoBehaviour
         _playerController.IsDirected = false;
         _tablet.SetLocked(false);
         CanLeave = true;
-        _ridePrompt.SetActive(true);
 
         // 플레이어가 직접 스위치를 누르면 안내를 숨김 (내려간 뒤는 PlayReturn이 이어서 맡음)
-        yield return new WaitUntil(() => _elevator.IsRiding);
-        _ridePrompt.SetActive(false);
+        // 엘리베이터 밖으로 나가면 E가 먹히지 않으므로 안내도 숨김, 닫히는 도중 내려 취소되면 다시 보임
+        while (true)
+        {
+            _ridePrompt.SetActive(_elevator.HasRider && !_elevator.IsRiding);
+            yield return null;
+        }
     }
 
     private IEnumerator WalkIntoElevatorRoutine()

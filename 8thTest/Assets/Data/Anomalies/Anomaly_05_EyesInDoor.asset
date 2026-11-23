@@ -17,5 +17,5 @@ MonoBehaviour:
   _requiredLight: 0
   _canBeLegitimized: 0
   _legitimizeOverride: 0
-  _minHour: 2
+  _minHour: 0
   _codeLine: 

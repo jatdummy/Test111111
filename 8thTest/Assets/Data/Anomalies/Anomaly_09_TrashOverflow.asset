@@ -18,4 +18,4 @@ MonoBehaviour:
   _canBeLegitimized: 0
   _legitimizeOverride: 0
   _minHour: 0
-  _codeLine: 'Trash.IsPickedUp = false;'
+  _codeLine: TrashCan.IsKnockedOver = true;
